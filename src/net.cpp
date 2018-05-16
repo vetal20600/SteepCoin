@@ -1813,7 +1813,7 @@ void StartNode(boost::thread_group& threadGroup)
 #endif
 
     // Send and receive from sockets, accept connections
-    // threadGroup.create_thread(boost::bind(&TraceThread<void (*)()>, "net", &ThreadSocketHandler));
+    threadGroup.create_thread(boost::bind(&TraceThread<void (*)()>, "net", &ThreadSocketHandler));
 
     printf("StartNode4a\n");
     // Initiate outbound connections from -addnode

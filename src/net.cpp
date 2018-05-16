@@ -1821,7 +1821,7 @@ void StartNode(boost::thread_group& threadGroup)
 
     printf("StartNode4b\n");
     // Initiate outbound connections
-    // threadGroup.create_thread(boost::bind(&TraceThread<void (*)()>, "opencon", &ThreadOpenConnections));
+    threadGroup.create_thread(boost::bind(&TraceThread<void (*)()>, "opencon", &ThreadOpenConnections));
 
     printf("StartNode4c\n");
     // Process messages

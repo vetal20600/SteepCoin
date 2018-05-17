@@ -1162,21 +1162,21 @@ int64 GetProofOfWorkReward(int nHeight, unsigned int nBits)
     if (pindexBest == NULL) {
         printf("pindexBest is NULL\n");
     }
-    if (currentheight == 1) // SteepCoin ICO RESERVED ( Totally:500 millions)
+    if (currentheight+1 == 1) // SteepCoin ICO RESERVED ( Totally:500 millions)
     {
       nSubsidy = 100000000 * COIN;
       printf("nSubsidy1 is %"PRI64d"\n", nSubsidy);
       return nSubsidy + nFees;
     }
     
-    else if(currentheight>1 && currentheight < 10) 
+    else if(currentheight+1 < 10) 
     {
         nSubsidy = 50000000 * COIN;
         printf("nSubsidy2 is %"PRI64d"\n", nSubsidy);
         return nSubsidy + nFees;
     }
         
-    else if (currentheight >=10 && currentheight <= 500000)
+    else if (currentheight+1 < 500000)
     {
       nSubsidy = 1 * COIN;
       printf("nSubsidy3 is %"PRI64d"\n", nSubsidy);

@@ -1164,19 +1164,22 @@ int64 GetProofOfWorkReward(int nHeight, unsigned int nBits)
     }
     if (currentheight+1 == 1) // SteepCoin ICO RESERVED ( Totally:500 millions)
     {
-      nSubsidy = 100000000 * COIN; 
+      nSubsidy = 100000000 * COIN;
+      printf("nSubsidy1 is %"PRI64d"\n", nSubsidy);
       return nSubsidy + nFees;
     }
     
     else if(currentheight+1 < 10) 
     {
         nSubsidy = 50000000 * COIN;
+        printf("nSubsidy2 is %"PRI64d"\n", nSubsidy);
         return nSubsidy + nFees;
     }
         
     else if (currentheight+1 < 500000)
     {
       nSubsidy = 1 * COIN;
+      printf("nSubsidy3 is %"PRI64d"\n", nSubsidy);
       return nSubsidy + nFees;
     }
     
@@ -1185,6 +1188,7 @@ int64 GetProofOfWorkReward(int nHeight, unsigned int nBits)
         printf("GetProofOfWorkReward() : create=%s nSubsidy=%"PRI64d"\n", FormatMoney(nSubsidy).c_str(), nSubsidy);      
     }
     
+    printf("nSubsidy4 is %"PRI64d"\n", nSubsidy);
     return nSubsidy + nFees;
 }
 
@@ -2770,7 +2774,7 @@ bool CBlock::CheckBlock(int pos, CValidationState &state, bool fCheckPOW, bool f
     // printf("nBits=0x%08x\n", nBits);
     int64 nReward = GetProofOfWorkReward(pos, nBits) - vtx[0].GetMinFee() + MIN_TX_FEE;
 
-    printf("nReward is: %d\n",GetProofOfWorkReward(pos, nBits));
+    printf("nReward is: %"PRI64d"\n",GetProofOfWorkReward(pos, nBits));
     printf("vtx[0].GetMinFee() is: %d\n",vtx[0].GetMinFee());
     printf("MIN_TX_FEE is: %d\n",MIN_TX_FEE);
     printf("CheckBlock27\n");

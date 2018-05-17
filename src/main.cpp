@@ -1162,14 +1162,20 @@ int64 GetProofOfWorkReward(int nHeight, unsigned int nBits)
     if (pindexBest == NULL) {
         printf("pindexBest is NULL\n");
     }
-    if (currentheight+1 == 1) // SteepCoin ICO RESERVED ( Totally:500 millions)
+
+    if (currentheight == 0) {
+        nSubsidy = 0 * COIN;
+        printf("nSubsidy_1 is %"PRI64d"\n", nSubsidy);
+        return nSubsidy + nFees;
+    }
+    if (currentheight == 1) // SteepCoin ICO RESERVED ( Totally:500 millions)
     {
       nSubsidy = 100000000 * COIN;
       printf("nSubsidy1 is %"PRI64d"\n", nSubsidy);
       return nSubsidy + nFees;
     }
     
-    else if(currentheight+1 < 10) 
+    else if(currentheight>=2 && currentheight < 10) 
     {
         nSubsidy = 50000000 * COIN;
         printf("nSubsidy2 is %"PRI64d"\n", nSubsidy);
@@ -3688,7 +3694,8 @@ bool InitBlockIndex() {
         txNew.vin.resize(1);
         txNew.vout.resize(1);
         txNew.vin[0].scriptSig = CScript() << 0 << CBigNum(42) << vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
-        txNew.vout[0].SetEmpty();
+        // txNew.vout[0].SetEmpty();
+        txNew.vout[0].nValue = 0 * COIN;
         CBlock block;
         block.vtx.push_back(txNew);
         block.hashPrevBlock = 0;

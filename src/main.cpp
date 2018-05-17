@@ -1154,16 +1154,18 @@ uint256 static GetOrphanRoot(const CBlockHeader* pblock)
 // miner's coin base reward
 int64 GetProofOfWorkReward(int nHeight, unsigned int nBits) 
 {
-    int currentheight = pindexBest->nHeight;
+    int currentheight = nHeight;
     int64 nFees = 0 * COIN;
     int64 nSubsidy = 0 * COIN;
     
     printf("nHeight is %d\n", nHeight);
     if (pindexBest == NULL) {
         printf("pindexBest is NULL\n");
+        printf("currentheight is %d\n", currentheight);
     }
     else {
         currentheight = pindexBest->nHeight;
+        printf("currentheight is pindexBest->nHeight is %d\n", currentheight);
     }
 
 

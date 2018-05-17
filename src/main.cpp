@@ -1158,6 +1158,7 @@ int64 GetProofOfWorkReward(int nHeight, unsigned int nBits)
     int64 nFees = 0 * COIN;
     int64 nSubsidy = 0 * COIN;
     
+    printf("nHeight is %d\n", nHeight);
     if (pindexBest == NULL) {
         printf("pindexBest is NULL\n");
     }
@@ -2768,6 +2769,7 @@ bool CBlock::CheckBlock(int pos, CValidationState &state, bool fCheckPOW, bool f
     // printf("nBits=0x%08x\n", nBits);
     int64 nReward = GetProofOfWorkReward(pos, nBits) - vtx[0].GetMinFee() + MIN_TX_FEE;
 
+    printf("nReward is: %d\n",nReward);
     printf("CheckBlock27\n");
     if (vtx[0].GetValueOut() > (IsProofOfWork()? (nReward) : 0)) {
         return state.DoS(50, error("CheckBlock() : coinbase reward exceeded %s > %s")); 
@@ -2790,21 +2792,17 @@ bool CBlock::CheckBlock(int pos, CValidationState &state, bool fCheckPOW, bool f
     // Build the merkle tree already. We need it anyway later, and it makes the
     // block cache the transaction hashes, which means they don't need to be
     // recalculated many times during this block's validation.
-    printf("CheckBlock31\n");
     BuildMerkleTree();
 
     // Check for duplicate txids. This is caught by ConnectInputs(),
     // but catching it earlier avoids a potential DoS attack:
-    printf("CheckBlock32\n");
     set<uint256> uniqueTx;
     for (unsigned int i=0; i<vtx.size(); i++) {
         uniqueTx.insert(GetTxHash(i));
     }
-    printf("CheckBlock33\n");
     if (uniqueTx.size() != vtx.size())
         return state.DoS(100, error("CheckBlock() : duplicate transaction"), true);
 
-    printf("CheckBlock34\n");
     unsigned int nSigOps = 0;
     BOOST_FOREACH(const CTransaction& tx, vtx)
     {
@@ -2813,7 +2811,6 @@ bool CBlock::CheckBlock(int pos, CValidationState &state, bool fCheckPOW, bool f
     if (nSigOps > MAX_BLOCK_SIGOPS)
         return state.DoS(100, error("CheckBlock() : out-of-bounds SigOpCount"));
 
-    printf("CheckBlock35\n");
     // Check merkle root
     if (fCheckMerkleRoot && hashMerkleRoot != BuildMerkleTree())
         return state.DoS(100, error("CheckBlock() : hashMerkleRoot mismatch"));

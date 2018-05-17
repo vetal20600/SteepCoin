@@ -1154,7 +1154,7 @@ uint256 static GetOrphanRoot(const CBlockHeader* pblock)
 // miner's coin base reward
 int64 GetProofOfWorkReward(int nHeight, unsigned int nBits) 
 {
-    int currentheight = nHeight;
+    int currentheight = pindexBest->nHeight;
     int64 nFees = 0 * COIN;
     int64 nSubsidy = 0 * COIN;
     
@@ -1162,20 +1162,19 @@ int64 GetProofOfWorkReward(int nHeight, unsigned int nBits)
     if (pindexBest == NULL) {
         printf("pindexBest is NULL\n");
     }
-
-    if (currentheight == 0) {
-        nSubsidy = 0 * COIN;
-        printf("nSubsidy_1 is %"PRI64d"\n", nSubsidy);
-        return nSubsidy + nFees;
+    else {
+        currentheight = pindexBest->nHeight;
     }
-    if (currentheight == 1) // SteepCoin ICO RESERVED ( Totally:500 millions)
+
+
+    if (currentheight+1 == 1) // SteepCoin ICO RESERVED ( Totally:500 millions)
     {
       nSubsidy = 100000000 * COIN;
       printf("nSubsidy1 is %"PRI64d"\n", nSubsidy);
       return nSubsidy + nFees;
     }
     
-    else if(currentheight>=2 && currentheight < 10) 
+    else if(currentheight+1 < 10) 
     {
         nSubsidy = 50000000 * COIN;
         printf("nSubsidy2 is %"PRI64d"\n", nSubsidy);
@@ -3743,13 +3742,13 @@ bool InitBlockIndex() {
         assert(block.hashMerkleRoot == uint256("0x23900140194a8df32c57b48c1a259e6c39596adf3499030877832cc79d55830a"));
         block.print();
 
-        printf("this_is_beforeV1\n");
+        // printf("this_is_beforeV1\n");
         assert(hash == hashGenesisBlock);
         // ppcoin: check genesis block
         {
             CValidationState state;
 
-            printf("this_is_beforeV2\n");
+            // printf("this_is_beforeV2\n");
             assert(block.CheckBlock(0,state));
         }
         printf("this_is_beforeV3\n");

@@ -2730,14 +2730,22 @@ bool CBlock::CheckBlock(int pos, CValidationState &state, bool fCheckPOW, bool f
 
 
     // ppcoin: only the second transaction can be the optional coinstake
-    for (unsigned int i = 2; i < vtx.size(); i++)
-        if (vtx[i].IsCoinStake())
-            return state.DoS(100, error("CheckBlock() : coinstake in wrong position"));
+    if (IsProofOfStake()) {
+        for (unsigned int i = 2; i < vtx.size(); i++)
+            if (vtx[i].IsCoinStake())
+                return state.DoS(100, error("CheckBlock() : coinstake in wrong position"));
+    }
+
+/*DONE*/
 
 
     // ppcoin: coinbase output should be empty if proof-of-stake block
     if (IsProofOfStake() && (vtx[0].vout.size() != 1 || !vtx[0].vout[0].IsEmpty()))
         return error("CheckBlock() : coinbase output not empty for proof-of-stake block");
+
+    // Second transaction must be coinstake, the rest must not be
+    /*if (IsProofOfStake() && (vtx.empty() || !vtx[1].IsCoinStake()))
+        return DoS(100, error("CheckBlock() : second tx is not coinstake"));*/
 
 
     // Check coinbase timestamp
@@ -2746,6 +2754,7 @@ bool CBlock::CheckBlock(int pos, CValidationState &state, bool fCheckPOW, bool f
         return state.DoS(50, error("CheckBlock() : coinbase timestamp is too early"));
     }
 
+/*DONE_*/
 
     // Check coinstake timestamp
     if (IsProofOfStake() && !CheckCoinStakeTimestamp(GetBlockTime(), (int64)vtx[1].nTime))
@@ -2756,9 +2765,9 @@ bool CBlock::CheckBlock(int pos, CValidationState &state, bool fCheckPOW, bool f
     if (IsProofOfWork()) {
         printf("proof_of_work\n");
     }
-    printf("nBits=0x%08x\n", nBits);
+    // printf("nBits=0x%08x\n", nBits);
     int64 nReward = GetProofOfWorkReward(pos, nBits) - vtx[0].GetMinFee() + MIN_TX_FEE;
-    // if (vtx[0].GetValueOut() > nReward)
+
     printf("CheckBlock27\n");
     if (vtx[0].GetValueOut() > (IsProofOfWork()? (nReward) : 0)) {
         return state.DoS(50, error("CheckBlock() : coinbase reward exceeded %s > %s")); 
@@ -2804,10 +2813,13 @@ bool CBlock::CheckBlock(int pos, CValidationState &state, bool fCheckPOW, bool f
     if (fCheckMerkleRoot && hashMerkleRoot != BuildMerkleTree())
         return state.DoS(100, error("CheckBlock() : hashMerkleRoot mismatch"));
 
+    printf("CheckBlock3a\n");
     // ppcoin: check block signature
     // Only check block signature if check merkle root, c.f. commit 3cd01fdf
-    if (fCheckMerkleRoot && !CheckBlockSignature())
-        return state.DoS(100, error("CheckBlock() : bad block signature"));
+    // if (fCheckMerkleRoot && !CheckBlockSignature())
+    if (IsProofOfStake() && (fCheckMerkleRoot && !CheckBlockSignature())) {
+        return state.DoS(100, error("CheckBlock() : bad block signature1"));
+    }
 
     printf("CheckBlock4\n");
     return true;

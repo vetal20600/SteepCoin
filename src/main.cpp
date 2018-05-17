@@ -2790,17 +2790,21 @@ bool CBlock::CheckBlock(int pos, CValidationState &state, bool fCheckPOW, bool f
     // Build the merkle tree already. We need it anyway later, and it makes the
     // block cache the transaction hashes, which means they don't need to be
     // recalculated many times during this block's validation.
+    printf("CheckBlock31\n");
     BuildMerkleTree();
 
     // Check for duplicate txids. This is caught by ConnectInputs(),
     // but catching it earlier avoids a potential DoS attack:
+    printf("CheckBlock32\n");
     set<uint256> uniqueTx;
     for (unsigned int i=0; i<vtx.size(); i++) {
         uniqueTx.insert(GetTxHash(i));
     }
+    printf("CheckBlock33\n");
     if (uniqueTx.size() != vtx.size())
         return state.DoS(100, error("CheckBlock() : duplicate transaction"), true);
 
+    printf("CheckBlock34\n");
     unsigned int nSigOps = 0;
     BOOST_FOREACH(const CTransaction& tx, vtx)
     {
@@ -2809,6 +2813,7 @@ bool CBlock::CheckBlock(int pos, CValidationState &state, bool fCheckPOW, bool f
     if (nSigOps > MAX_BLOCK_SIGOPS)
         return state.DoS(100, error("CheckBlock() : out-of-bounds SigOpCount"));
 
+    printf("CheckBlock35\n");
     // Check merkle root
     if (fCheckMerkleRoot && hashMerkleRoot != BuildMerkleTree())
         return state.DoS(100, error("CheckBlock() : hashMerkleRoot mismatch"));

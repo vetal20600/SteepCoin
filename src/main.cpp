@@ -1869,7 +1869,8 @@ bool CTransaction::CheckInputs(CValidationState &state, CCoinsViewCache &inputs,
             if (pindexBest == NULL) {
                 printf("pindexBest_ is NULL\n");
             }
-            if (nStakeReward > GetProofOfStakeReward(pindexBest->nHeight, nCoinAge) - GetMinFee() + MIN_TX_FEE)
+            int64 nCalculatedStakeReward = GetProofOfStakeReward(pindexBest->nHeight, nCoinAge) - GetMinFee() + MIN_TX_FEE;
+            if (nStakeReward > nCalculatedStakeReward)
                 return state.DoS(100, error("CheckInputs() : %s stake reward exceeded", GetHash().ToString().c_str()));
         }
         else
@@ -2769,8 +2770,11 @@ bool CBlock::CheckBlock(int pos, CValidationState &state, bool fCheckPOW, bool f
     // printf("nBits=0x%08x\n", nBits);
     int64 nReward = GetProofOfWorkReward(pos, nBits) - vtx[0].GetMinFee() + MIN_TX_FEE;
 
-    printf("nReward is: %d\n",nReward);
+    printf("nReward is: %d\n",GetProofOfWorkReward(pos, nBits));
+    printf("vtx[0].GetMinFee() is: %d\n",vtx[0].GetMinFee());
+    printf("MIN_TX_FEE is: %d\n",MIN_TX_FEE);
     printf("CheckBlock27\n");
+    if (vtx[0].GetValueOut() > nReward)
     if (vtx[0].GetValueOut() > (IsProofOfWork()? (nReward) : 0)) {
         return state.DoS(50, error("CheckBlock() : coinbase reward exceeded %s > %s")); 
         /*return state.DoS(50, error("CheckBlock() : coinbase reward exceeded %s > %s", 

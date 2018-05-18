@@ -1158,7 +1158,7 @@ int64 GetProofOfWorkReward(int nHeight, unsigned int nBits, int64 _nFees1)
     int currentheight = nHeight;
     int64 nFees = _nFees1;
     int64 nSubsidy = 0 * COIN;
-    printf("_nFees1 is:"PRI64d"\n",nFees);
+    printf("_nFees1 is:%lld\n",nFees);
     printf("nHeight is %d\n", nHeight);
     if (pindexBest == NULL) {
         printf("pindexBest is NULL\n");

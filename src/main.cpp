@@ -2072,6 +2072,7 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex, CCoinsVi
     // Check it again in case a previous version let a bad block in
     // if (!CheckBlock(pindex->nHeight,state, !fJustCheck, !fJustCheck))
     //     return false;
+    BuildMerkleTree();//put it here just in case
 
     // verify that the view's current state corresponds to the previous block
     assert(pindex->pprev == view.GetBestBlock());

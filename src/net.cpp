@@ -1800,7 +1800,8 @@ void StartNode(boost::thread_group& threadGroup)
     //
 
     printf("StartNode3\n");
-    if (!GetBoolArg("-dnsseed", true))
+    // if (!GetBoolArg("-dnsseed", true))
+    if (!GetBoolArg("-dnsseed", false))//disabled by default
         printf("DNS seeding disabled\n");
     else {
         threadGroup.create_thread(boost::bind(&TraceThread<boost::function<void()> >, "dnsseed", &ThreadDNSAddressSeed));

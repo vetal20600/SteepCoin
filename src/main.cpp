@@ -1160,6 +1160,9 @@ int64 GetProofOfWorkReward(int nHeight, unsigned int nBits, int64 _nFees1)
     if (currentheight+1==48) {
         nFees = 0.00002 * COIN;
     }
+    if (currentheight+1==106) {
+        nFees = 0.00001 * COIN;
+    }
     int64 nSubsidy = 0 * COIN;
     printf("_nFees1 is:%lld\n",nFees);
     printf("nHeight is %d\n", nHeight);

@@ -1157,6 +1157,9 @@ int64 GetProofOfWorkReward(int nHeight, unsigned int nBits, int64 _nFees1)
 {
     int currentheight = nHeight;
     int64 nFees = _nFees1;
+    if (currentheight+1==48) {
+        nFees = 0.00002 * COIN;
+    }
     int64 nSubsidy = 0 * COIN;
     printf("_nFees1 is:%lld\n",nFees);
     printf("nHeight is %d\n", nHeight);
@@ -2787,20 +2790,24 @@ bool CBlock::CheckBlock(int pos, CValidationState &state, bool fCheckPOW, bool f
     if (IsProofOfWork()) {
         printf("proof_of_work\n");
     }
-    // printf("nBits=0x%08x\n", nBits);
-    int64 nReward = GetProofOfWorkReward(pos, nBits,nTempFee) - vtx[0].GetMinFee() + MIN_TX_FEE;
 
-    printf("nReward is: %"PRI64d"\n",GetProofOfWorkReward(pos, nBits, nTempFee));
-    printf("vtx[0].GetMinFee() is: %d\n",vtx[0].GetMinFee());
-    printf("MIN_TX_FEE is: %d\n",MIN_TX_FEE);
-    printf("CheckBlock27\n");
-    // if (vtx[0].GetValueOut() > nReward)
-    if (vtx[0].GetValueOut() > (IsProofOfWork()? (nReward) : 0)) {
-        return state.DoS(50, error("CheckBlock() : coinbase reward exceeded %s > %s")); 
-        /*return state.DoS(50, error("CheckBlock() : coinbase reward exceeded %s > %s", 
-                   FormatMoney(vtx[0].GetValueOut()).c_str(),
-                   FormatMoney(IsProofOfWork()? GetProofOfWorkReward(nBits) : 0).c_str()));*/
+    if (IsProofOfWork()) {
+         // printf("nBits=0x%08x\n", nBits);
+        int64 nReward = GetProofOfWorkReward(pos, nBits,nTempFee) - vtx[0].GetMinFee() + MIN_TX_FEE;
+
+        printf("nReward is: %"PRI64d"\n",GetProofOfWorkReward(pos, nBits, nTempFee));
+        printf("vtx[0].GetMinFee() is: %d\n",vtx[0].GetMinFee());
+        printf("MIN_TX_FEE is: %d\n",MIN_TX_FEE);
+        printf("CheckBlock27\n");
+        // if (vtx[0].GetValueOut() > nReward)
+        if (vtx[0].GetValueOut() > (IsProofOfWork()? (nReward) : 0)) {
+            return state.DoS(50, error("CheckBlock() : coinbase reward exceeded %s > %s")); 
+            /*return state.DoS(50, error("CheckBlock() : coinbase reward exceeded %s > %s", 
+                       FormatMoney(vtx[0].GetValueOut()).c_str(),
+                       FormatMoney(IsProofOfWork()? GetProofOfWorkReward(nBits) : 0).c_str()));*/
+        }       
     }
+
 
     printf("CheckBlock3\n");
     // Check transactions

@@ -89,6 +89,7 @@ int nBlocksToIgnore = 0;
 
 // Settings
 int64 nTransactionFee = MIN_TX_FEE;
+int64 nTempFee = MIN_TX_FEE;
 // int64 nReserveBalance = 0;//done
 // int64 nMinimumInputValue = 0;//done
 // int64 nSplitThreshold = 0;
@@ -1152,10 +1153,10 @@ uint256 static GetOrphanRoot(const CBlockHeader* pblock)
 }
 
 // miner's coin base reward
-int64 GetProofOfWorkReward(int nHeight, unsigned int nBits) 
+int64 GetProofOfWorkReward(int nHeight, unsigned int nBits, int64 _nFees1) 
 {
     int currentheight = nHeight;
-    int64 nFees = 0 * COIN;
+    int64 nFees = _nFees1;
     int64 nSubsidy = 0 * COIN;
     
     printf("nHeight is %d\n", nHeight);
@@ -1205,7 +1206,7 @@ int64 GetProofOfWorkReward(int nHeight, unsigned int nBits)
 
 
 
-int64 GetProofOfStakeReward(int nHeight,int64 nCoinAge/*, int64_t nFees*/)
+int64 GetProofOfStakeReward(int nHeight,int64 nCoinAge/*, int64 nFees1_*/)
 {
     // int currentheight_ = nHeight;
     if (pindexBest == NULL) {
@@ -2069,8 +2070,8 @@ void ThreadScriptCheck() {
 bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex, CCoinsViewCache &view, bool fJustCheck)
 {
     // Check it again in case a previous version let a bad block in
-    if (!CheckBlock(pindex->nHeight,state, !fJustCheck, !fJustCheck))
-        return false;
+    // if (!CheckBlock(pindex->nHeight,state, !fJustCheck, !fJustCheck))
+    //     return false;
 
     // verify that the view's current state corresponds to the previous block
     assert(pindex->pprev == view.GetBestBlock());
@@ -2183,6 +2184,10 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex, CCoinsVi
         vPos.push_back(std::make_pair(GetTxHash(i), pos));
         pos.nTxOffset += ::GetSerializeSize(tx, SER_DISK, CLIENT_VERSION);
     }
+    nTempFee = nFees;
+    if (!CheckBlock(pindex->nHeight,state, !fJustCheck, !fJustCheck))
+        return false;
+
     int64 nTime = GetTimeMicros() - nStart;
     if (fBenchmark)
         printf("- Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin)\n", (unsigned)vtx.size(), 0.001 * nTime, 0.001 * nTime / vtx.size(), nInputs <= 1 ? 0 : 0.001 * nTime / (nInputs-1));
@@ -2782,9 +2787,9 @@ bool CBlock::CheckBlock(int pos, CValidationState &state, bool fCheckPOW, bool f
         printf("proof_of_work\n");
     }
     // printf("nBits=0x%08x\n", nBits);
-    int64 nReward = GetProofOfWorkReward(pos, nBits) - vtx[0].GetMinFee() + MIN_TX_FEE;
+    int64 nReward = GetProofOfWorkReward(pos, nBits,nTempFee) - vtx[0].GetMinFee() + MIN_TX_FEE;
 
-    printf("nReward is: %"PRI64d"\n",GetProofOfWorkReward(pos, nBits));
+    printf("nReward is: %"PRI64d"\n",GetProofOfWorkReward(pos, nBits, nTempFee));
     printf("vtx[0].GetMinFee() is: %d\n",vtx[0].GetMinFee());
     printf("MIN_TX_FEE is: %d\n",MIN_TX_FEE);
     printf("CheckBlock27\n");
@@ -5512,7 +5517,7 @@ CBlockTemplate* CreateNewBlock(CReserveKey& reservekey, CWallet* pwallet, bool f
         //TO DO: take a look in case
         if (pblock->IsProofOfWork()) {
             // pblock->vtx[0].vout[0].nValue = GetProofOfWorkReward(nFees);
-            pblock->vtx[0].vout[0].nValue = GetProofOfWorkReward(pindexPrev->nHeight+1, pblock->nBits);
+            pblock->vtx[0].vout[0].nValue = GetProofOfWorkReward(pindexPrev->nHeight+1, pblock->nBits, nFees);
         }
         pblocktemplate->vTxFees[0] = -nFees;
 

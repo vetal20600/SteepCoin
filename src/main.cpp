@@ -1158,7 +1158,7 @@ int64 GetProofOfWorkReward(int nHeight, unsigned int nBits, int64 _nFees1)
     int currentheight = nHeight;
     int64 nFees = _nFees1;
     int64 nSubsidy = 0 * COIN;
-    
+    printf("_nFees1 is:"PRI64d"\n",nFees);
     printf("nHeight is %d\n", nHeight);
     if (pindexBest == NULL) {
         printf("pindexBest is NULL\n");
@@ -2794,7 +2794,7 @@ bool CBlock::CheckBlock(int pos, CValidationState &state, bool fCheckPOW, bool f
     printf("vtx[0].GetMinFee() is: %d\n",vtx[0].GetMinFee());
     printf("MIN_TX_FEE is: %d\n",MIN_TX_FEE);
     printf("CheckBlock27\n");
-    if (vtx[0].GetValueOut() > nReward)
+    // if (vtx[0].GetValueOut() > nReward)
     if (vtx[0].GetValueOut() > (IsProofOfWork()? (nReward) : 0)) {
         return state.DoS(50, error("CheckBlock() : coinbase reward exceeded %s > %s")); 
         /*return state.DoS(50, error("CheckBlock() : coinbase reward exceeded %s > %s", 

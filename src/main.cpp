@@ -2812,7 +2812,7 @@ bool CBlock::CheckBlock(int pos, CValidationState &state, bool fCheckPOW, bool f
     }
 
 
-    // printf("CheckBlock3\n");
+    printf("CheckBlock28\n");
     // Check transactions
     BOOST_FOREACH(const CTransaction& tx, vtx)
     {
@@ -2828,6 +2828,7 @@ bool CBlock::CheckBlock(int pos, CValidationState &state, bool fCheckPOW, bool f
     // recalculated many times during this block's validation.
     BuildMerkleTree();
 
+    printf("CheckBlock29\n");
     // Check for duplicate txids. This is caught by ConnectInputs(),
     // but catching it earlier avoids a potential DoS attack:
     set<uint256> uniqueTx;
@@ -2849,7 +2850,7 @@ bool CBlock::CheckBlock(int pos, CValidationState &state, bool fCheckPOW, bool f
     if (fCheckMerkleRoot && hashMerkleRoot != BuildMerkleTree())
         return state.DoS(100, error("CheckBlock() : hashMerkleRoot mismatch"));
 
-    printf("CheckBlock3a\n");
+    printf("CheckBlock30\n");
     // ppcoin: check block signature
     // Only check block signature if check merkle root, c.f. commit 3cd01fdf
     // if (fCheckMerkleRoot && !CheckBlockSignature())

@@ -683,7 +683,7 @@ int64 CTransaction::GetMinFee(unsigned int nBlockSize, bool fAllowFree,
     unsigned int nNewBlockSize = nBlockSize + nBytes;
     int64 nMinFee = (1 + (int64)nBytes / 1000) * nBaseFee;
 
-    if (fAllowFree)
+    /*if (fAllowFree)
     {
         // There is a free transaction area in blocks created by most miners,
         // * If we are relaying we allow transactions up to DEFAULT_BLOCK_PRIORITY_SIZE - 1000
@@ -693,12 +693,13 @@ int64 CTransaction::GetMinFee(unsigned int nBlockSize, bool fAllowFree,
         //   to be considered safe and assume they can likely make it into this section.
         if (nBytes < (mode == GMF_SEND ? 1000 : (DEFAULT_BLOCK_PRIORITY_SIZE - 1000)))
             nMinFee = 0;
-    }
+    }*/
 
     // This code can be removed after enough miners have upgraded to version 0.9.
     // Until then, be safe when sending and require a fee if any output
     // is less than CENT:
-    if (nMinFee < nBaseFee && mode == GMF_SEND)
+    // if (nMinFee < nBaseFee && mode == GMF_SEND)
+    if (nMinFee < nBaseFee)
     {
         BOOST_FOREACH(const CTxOut& txout, vout)
             if (txout.nValue < CENT)

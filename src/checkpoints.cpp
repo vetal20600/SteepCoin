@@ -13,6 +13,7 @@
 #include "txdb.h"
 #include "uint256.h"
 
+
 namespace Checkpoints
 {
     typedef std::map<int, uint256> MapCheckpoints;   // hardened checkpoints

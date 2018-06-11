@@ -1182,21 +1182,21 @@ int64 GetProofOfWorkReward(int nHeight, unsigned int nBits, int64 _nFees1)
     if (currentheight+1 == 1) // SteepCoin ICO RESERVED ( Totally:500 millions)
     {
       nSubsidy = 100000000 * COIN;
-      printf("nSubsidy1 is %"PRI64d"\n", nSubsidy);
+      printf("nSubsidy_ver1 is %"PRI64d"\n", nSubsidy);
       return nSubsidy + nFees;
     }
     
     else if(currentheight+1 < 10) 
     {
         nSubsidy = 50000000 * COIN;
-        printf("nSubsidy2 is %"PRI64d"\n", nSubsidy);
+        printf("nSubsidy_ver2 is %"PRI64d"\n", nSubsidy);
         return nSubsidy + nFees;
     }
         
     else if (currentheight+1 < 500000)
     {
       nSubsidy = 1 * COIN;
-      printf("nSubsidy3 is %"PRI64d"\n", nSubsidy);
+      printf("nSubsidy_ver3 is %"PRI64d" (ver3 means currentheight+1 < 500000)\n", nSubsidy);
       return nSubsidy + nFees;
     }
     
@@ -2788,10 +2788,10 @@ bool CBlock::CheckBlock(int pos, CValidationState &state, bool fCheckPOW, bool f
     if (IsProofOfStake() && !CheckCoinStakeTimestamp(GetBlockTime(), (int64)vtx[1].nTime))
         return state.DoS(50, error("CheckBlock() : coinstake timestamp violation nTimeBlock=%" PRI64u" nTimeTx=%u", GetBlockTime(), vtx[1].nTime));
 
-    printf("CheckBlock26\n");
+    // printf("CheckBlock26\n");
     // Check coinbase reward
     if (IsProofOfWork()) {
-        printf("proof_of_work\n");
+        printf("CheckBlock26 | proof_of_work\n");
     }
 
     if (IsProofOfWork()) {
@@ -2812,7 +2812,7 @@ bool CBlock::CheckBlock(int pos, CValidationState &state, bool fCheckPOW, bool f
     }
 
 
-    printf("CheckBlock3\n");
+    // printf("CheckBlock3\n");
     // Check transactions
     BOOST_FOREACH(const CTransaction& tx, vtx)
     {

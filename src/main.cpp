@@ -2802,6 +2802,7 @@ bool CBlock::CheckBlock(int pos, CValidationState &state, bool fCheckPOW, bool f
         printf("nReward is: %"PRI64d"\n",GetProofOfWorkReward(pos, nBits, nTempFee));
         printf("vtx[0].GetMinFee() is: %d\n",vtx[0].GetMinFee());
         printf("MIN_TX_FEE is: %d\n",MIN_TX_FEE);
+        printf("nTempFee is: %d\n",nTempFee);
         printf("CheckBlock27\n");
         // if (vtx[0].GetValueOut() > nReward)
         if (vtx[0].GetValueOut() > (IsProofOfWork()? (nReward) : 0)) {

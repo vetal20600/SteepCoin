@@ -1202,8 +1202,7 @@ int64 GetProofOfWorkReward(int nHeight, unsigned int nBits, int64 _nFees1)
     }
     
     if (fDebug && GetBoolArg("-printcreation")) {
-        // printf("GetProofOfWorkReward() : create=%s nBits=0x%08x nSubsidy=%" PRI64d"\n", FormatMoney(nSubsidy).c_str(), nBits, nSubsidy);
-        printf("GetProofOfWorkReward() : create=%s nSubsidy=%"PRI64d"\n", FormatMoney(nSubsidy).c_str(), nSubsidy);      
+        printf("GetProofOfWorkReward_() : create=%s nSubsidy=%"PRI64d"\n", FormatMoney(nSubsidy).c_str(), nSubsidy);      
     }
     
     printf("nSubsidy4 is %"PRI64d"\n", nSubsidy);
@@ -2799,7 +2798,8 @@ bool CBlock::CheckBlock(int pos, CValidationState &state, bool fCheckPOW, bool f
          // printf("nBits=0x%08x\n", nBits);
         int64 nReward = GetProofOfWorkReward(pos, nBits,nTempFee) - vtx[0].GetMinFee() + MIN_TX_FEE;
 
-        printf("nReward is: %"PRI64d"\n",GetProofOfWorkReward(pos, nBits, nTempFee));
+        printf("GetProofOfWorkReward_ is: %"PRI64d"\n",GetProofOfWorkReward(pos, nBits, nTempFee));
+        printf("nReward is: %"PRI64d"\n", nReward);
         printf("vtx[0].GetMinFee() is: %d\n",vtx[0].GetMinFee());
         printf("MIN_TX_FEE is: %d\n",MIN_TX_FEE);
         printf("nTempFee is: %d\n",nTempFee);

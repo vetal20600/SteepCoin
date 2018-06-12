@@ -2249,6 +2249,7 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex, CCoinsVi
         vPos.push_back(std::make_pair(GetTxHash(i), pos));
         pos.nTxOffset += ::GetSerializeSize(tx, SER_DISK, CLIENT_VERSION);
     }
+    printf("we got new fee for %lld at height %d \n", nFees, pindex->nHeight);
     // nTempFee = nFees;
     /*if (!CheckBlock_a(pindex->nHeight,state, !fJustCheck, !fJustCheck))
         return false;*/
@@ -2852,8 +2853,8 @@ bool CBlock::CheckBlock(int pos, CValidationState &state, bool fCheckPOW, bool f
         printf("CheckBlock26 | proof_of_work\n");
     }
 
-    int64 nfee = GetCurrentFee(state);
-    printf("updated_fee, value: %lld\n",nfee);
+    // int64 nfee = GetCurrentFee(state);
+    // printf("updated_fee, value: %lld\n",nfee);
     if (IsProofOfWork()) {
          // printf("nBits=0x%08x\n", nBits);
         int64 nReward = GetProofOfWorkReward(pos, nBits,nTempFee) - vtx[0].GetMinFee() + MIN_TX_FEE;

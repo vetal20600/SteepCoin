@@ -2851,6 +2851,8 @@ bool CBlock::CheckBlock(int pos, CValidationState &state, bool fCheckPOW, bool f
         printf("CheckBlock26 | proof_of_work\n");
     }
 
+    int64 nfee = GetCurrentFee(state);
+    printf("updated_fee, value: %d\n",nfee);
     if (IsProofOfWork()) {
          // printf("nBits=0x%08x\n", nBits);
         int64 nReward = GetProofOfWorkReward(pos, nBits,nTempFee) - vtx[0].GetMinFee() + MIN_TX_FEE;

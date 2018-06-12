@@ -2082,7 +2082,7 @@ int64 CBlock::GetCurrentFee(CValidationState &state1){
     // std::vector<std::pair<uint256, CDiskTxPos> > vPos;
     // vPos.reserve(vtx.size());
     int64 nBIP16SwitchTime = 1333238400;
-    bool fStrictPayToScriptHash2 = (pindex->nTime >= nBIP16SwitchTime);
+    bool fStrictPayToScriptHash2 = true;
     for (unsigned int i=0; i<vtx.size(); i++)
     {
         const CTransaction &tx = vtx[i];
@@ -2177,7 +2177,7 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex, CCoinsVi
 
     // BIP16 didn't become active until Apr 1 2012
     int64 nBIP16SwitchTime = 1333238400;
-    bool fStrictPayToScriptHash = true;//(pindex->nTime >= nBIP16SwitchTime);
+    bool fStrictPayToScriptHash = (pindex->nTime >= nBIP16SwitchTime);
 
     unsigned int flags = SCRIPT_VERIFY_NOCACHE |
                          (fStrictPayToScriptHash ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE);

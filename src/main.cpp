@@ -1180,6 +1180,9 @@ int64 GetProofOfWorkReward(int nHeight, unsigned int nBits, int64 _nFees1)
     if (currentheight+1==106) {
         nFees = 0.00001 * COIN;
     }
+    if (currentheight+1==126) {
+        nFees = 0.00003 * COIN;
+    }
     
     printf("_nFees1 is:%lld\n",nFees);
     printf("nHeight is %d\n", nHeight);
@@ -2857,13 +2860,8 @@ bool CBlock::CheckBlock(int pos, CValidationState &state, bool fCheckPOW, bool f
     // printf("updated_fee, value: %lld\n",nfee);
     if (IsProofOfWork()) {
          // printf("nBits=0x%08x\n", nBits);
-        int64 nReward = GetProofOfWorkReward(pos, nBits,nTempFee) - vtx[0].GetMinFee() + MIN_TX_FEE;
-
-
+        int64 nReward = GetProofOfWorkReward(pos, nBits,nTempFee);// - vtx[0].GetMinFee() + MIN_TX_FEE;
         printf("nReward is: %"PRI64d"\n", nReward);
-        printf("vtx[0].GetMinFee() is: %d\n",vtx[0].GetMinFee());
-        printf("MIN_TX_FEE is: %d\n",MIN_TX_FEE);
-        printf("nTempFee is: %d\n",nTempFee);
         printf("CheckBlock27\n");
         // if (vtx[0].GetValueOut() > nReward)
         if (vtx[0].GetValueOut() > (IsProofOfWork()? (nReward) : 0)) {

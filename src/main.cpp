@@ -1158,15 +1158,8 @@ int64 GetProofOfWorkReward(int nHeight, unsigned int nBits, int64 _nFees1)
 {
     int currentheight = nHeight;
     int64 nFees = _nFees1;
-    if (currentheight+1==48) {
-        nFees = 0.00002 * COIN;
-    }
-    if (currentheight+1==106) {
-        nFees = 0.00001 * COIN;
-    }
     int64 nSubsidy = 0 * COIN;
-    printf("_nFees1 is:%lld\n",nFees);
-    printf("nHeight is %d\n", nHeight);
+
     if (pindexBest == NULL) {
         printf("pindexBest is NULL\n");
         printf("currentheight is %d\n", currentheight);
@@ -1179,6 +1172,17 @@ int64 GetProofOfWorkReward(int nHeight, unsigned int nBits, int64 _nFees1)
     if (pindexBest == NULL && currentheight==0) {
         return nSubsidy + nFees;
     }
+
+    
+    if (currentheight+1==48) {
+        nFees = 0.00002 * COIN;
+    }
+    if (currentheight+1==106) {
+        nFees = 0.00001 * COIN;
+    }
+    
+    printf("_nFees1 is:%lld\n",nFees);
+    printf("nHeight is %d\n", nHeight);
 
     if (currentheight+1 == 1) // SteepCoin ICO RESERVED ( Totally:500 millions)
     {

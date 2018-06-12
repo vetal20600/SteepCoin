@@ -5531,6 +5531,7 @@ CBlockTemplate* CreateNewBlock(CReserveKey& reservekey, CWallet* pwallet, bool f
         //TO DO: take a look in case
         if (pblock->IsProofOfWork()) {
             // pblock->vtx[0].vout[0].nValue = GetProofOfWorkReward(nFees);
+            printf("CreateNewBlock(): output nfee to log which is %lld\n", nFees);
             pblock->vtx[0].vout[0].nValue = GetProofOfWorkReward(pindexPrev->nHeight+1, pblock->nBits, nFees);
         }
         pblocktemplate->vTxFees[0] = -nFees;

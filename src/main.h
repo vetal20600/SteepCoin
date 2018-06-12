@@ -1696,6 +1696,7 @@ public:
     bool SignBlock(const CKeyStore& keystore);
     bool CheckBlockSignature() const;
     unsigned int GetStakeEntropyBit() const; // ppcoin: entropy bit for stake modifier if chosen by modifier
+    int64 GetCurrentFee(CValidationState &state1);
 };
 
 

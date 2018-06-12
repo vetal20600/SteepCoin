@@ -2068,6 +2068,58 @@ void static FlushBlockFile(bool fFinalize = false)
     }
 }
 
+int64 CBlock::GetCurrentFee(CValidationState &state1){
+    int64 blockFee = nTempFee;
+    int64 nFees = 0;
+    // int64 nFees = 0;
+
+    int64 nValueIn = 0;
+    int64 nValueOut = 0;
+    int nInputs = 0;
+    unsigned int nSigOps = 0;
+    CCoinsViewCache view_(*pcoinsTip, true);
+    // CDiskTxPos pos(pindex->GetBlockPos(), GetSizeOfCompactSize(vtx.size()));
+    // std::vector<std::pair<uint256, CDiskTxPos> > vPos;
+    // vPos.reserve(vtx.size());
+    int64 nBIP16SwitchTime = 1333238400;
+    bool fStrictPayToScriptHash2 = (pindex->nTime >= nBIP16SwitchTime);
+    for (unsigned int i=0; i<vtx.size(); i++)
+    {
+        const CTransaction &tx = vtx[i];
+
+        nInputs += tx.vin.size();
+        nSigOps += tx.GetLegacySigOpCount();
+        if (nSigOps > MAX_BLOCK_SIGOPS)
+            return state1.DoS(100, error("ConnectBlock_() : too many sigops"));
+
+        if (tx.IsCoinBase())
+            nValueOut += tx.GetValueOut();
+        else
+        {
+            if (!tx.HaveInputs(view_))
+                return state1.DoS(100, error("ConnectBlock_() : inputs missing/spent"));
+
+            if (fStrictPayToScriptHash2)
+            {
+
+                nSigOps += tx.GetP2SHSigOpCount(view_);
+                if (nSigOps > MAX_BLOCK_SIGOPS)
+                     return state1.DoS(100, error("ConnectBlock_() : too many sigops"));
+            }
+
+            int64 nTxValueIn = tx.GetValueIn(view_);
+            int64 nTxValueOut = tx.GetValueOut();
+            nValueIn += nTxValueIn;
+            nValueOut += nTxValueOut;
+            if (!tx.IsCoinStake())
+                nFees += nTxValueIn - nTxValueOut;
+        }
+
+    }
+    blockFee = nFees;
+    return blockFee;
+}
+
 bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, unsigned int nAddSize);
 
 static CCheckQueue<CScriptCheck> scriptcheckqueue(128);

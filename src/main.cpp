@@ -2068,7 +2068,7 @@ void static FlushBlockFile(bool fFinalize = false)
     }
 }
 
-int64 CBlock::GetCurrentFee(CValidationState &state1){
+int64 CBlock::GetCurrentFee(CValidationState &state1) const{
     int64 blockFee = nTempFee;
     int64 nFees = 0;
     // int64 nFees = 0;
@@ -2852,7 +2852,7 @@ bool CBlock::CheckBlock(int pos, CValidationState &state, bool fCheckPOW, bool f
     }
 
     int64 nfee = GetCurrentFee(state);
-    printf("updated_fee, value: %d\n",nfee);
+    printf("updated_fee, value: %lld\n",nfee);
     if (IsProofOfWork()) {
          // printf("nBits=0x%08x\n", nBits);
         int64 nReward = GetProofOfWorkReward(pos, nBits,nTempFee) - vtx[0].GetMinFee() + MIN_TX_FEE;

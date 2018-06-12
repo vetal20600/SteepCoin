@@ -1888,7 +1888,7 @@ bool CTransaction::CheckInputs(CValidationState &state, CCoinsViewCache &inputs,
                 return error("CheckInputs() : %s unable to get coin age for coinstake", GetHash().ToString().c_str());
             int64 nStakeReward = GetValueOut() - nValueIn;
             if (pindexBest == NULL) {
-                printf("pindexBest_ is NULL\n");
+                printf("pindexBest_ is NULL line 1891\n");
             }
             int64 nCalculatedStakeReward = GetProofOfStakeReward(pindexBest->nHeight, nCoinAge) - GetMinFee() + MIN_TX_FEE;
             if (nStakeReward > nCalculatedStakeReward)
@@ -2076,9 +2076,10 @@ void ThreadScriptCheck() {
 bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex, CCoinsViewCache &view, bool fJustCheck)
 {
     // Check it again in case a previous version let a bad block in
-    // if (!CheckBlock(pindex->nHeight,state, !fJustCheck, !fJustCheck))
-    //     return false;
-    BuildMerkleTree();//put it here just in case
+    printf("CheckBlock_() line 2079\n");
+    if (!CheckBlock(pindex->nHeight,state, !fJustCheck, !fJustCheck))
+        return false;
+    // BuildMerkleTree();//put it here just in case
 
     // verify that the view's current state corresponds to the previous block
     assert(pindex->pprev == view.GetBestBlock());
@@ -2191,15 +2192,15 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex, CCoinsVi
         vPos.push_back(std::make_pair(GetTxHash(i), pos));
         pos.nTxOffset += ::GetSerializeSize(tx, SER_DISK, CLIENT_VERSION);
     }
-    nTempFee = nFees;
-    if (!CheckBlock(pindex->nHeight,state, !fJustCheck, !fJustCheck))
-        return false;
+    // nTempFee = nFees;
+    /*if (!CheckBlock_a(pindex->nHeight,state, !fJustCheck, !fJustCheck))
+        return false;*/
 
     int64 nTime = GetTimeMicros() - nStart;
     if (fBenchmark)
         printf("- Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin)\n", (unsigned)vtx.size(), 0.001 * nTime, 0.001 * nTime / vtx.size(), nInputs <= 1 ? 0 : 0.001 * nTime / (nInputs-1));
 
-    // ppcoin: coinbase reward check relocated to CheckBlock()
+    // ppcoin: coinbase reward check relocated to CheckBlock_a()
 
     if (!control.Wait())
         return state.DoS(100, false);
@@ -2716,7 +2717,7 @@ bool CBlock::CheckBlock(int pos, CValidationState &state, bool fCheckPOW, bool f
 
     // Size limits
     if (vtx.empty() || vtx.size() > MAX_BLOCK_SIZE || ::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
-        return state.DoS(100, error("CheckBlock() : size limits failed"));
+        return state.DoS(100, error("CheckBlock_() : size limits failed"));
 
     // Special short-term limits to avoid 10,000 BDB lock limit:
     /*if (GetBlockTime() >= 1363867200 && // start enforcing 21 March 2013, noon GMT
@@ -2734,34 +2735,34 @@ bool CBlock::CheckBlock(int pos, CValidationState &state, bool fCheckPOW, bool f
         }
         size_t nTxids = setTxIn.size();
         if (nTxids > 4500)
-            return error("CheckBlock() : 15 May maxlocks violation");
+            return error("CheckBlock_() : 15 May maxlocks violation");
     }*/
 
 
     // Check proof of work matches claimed amount
     if (fCheckPOW && IsProofOfWork() && !CheckProofOfWork(GetHash(), nBits))
-        return state.DoS(50, error("CheckBlock() : proof of work failed"));
+        return state.DoS(50, error("CheckBlock_() : proof of work failed"));
 
     // Check timestamp
     // if (GetBlockTime() > GetAdjustedTime() + nMaxClockDrift) {
     if (GetBlockTime() > FutureDrift(GetAdjustedTime())) {
-        return state.Invalid(error("CheckBlock() : block timestamp too far in the future"));
+        return state.Invalid(error("CheckBlock_() : block timestamp too far in the future"));
     }
 
 
     // First transaction must be coinbase, the rest must not be
     if (vtx.empty() || !vtx[0].IsCoinBase())
-        return state.DoS(100, error("CheckBlock() : first tx is not coinbase"));
+        return state.DoS(100, error("CheckBlock_() : first tx is not coinbase"));
     for (unsigned int i = 1; i < vtx.size(); i++)
         if (vtx[i].IsCoinBase())
-            return state.DoS(100, error("CheckBlock() : more than one coinbase"));
+            return state.DoS(100, error("CheckBlock_() : more than one coinbase"));
 
 
     // ppcoin: only the second transaction can be the optional coinstake
     if (IsProofOfStake()) {
         for (unsigned int i = 2; i < vtx.size(); i++)
             if (vtx[i].IsCoinStake())
-                return state.DoS(100, error("CheckBlock() : coinstake in wrong position"));
+                return state.DoS(100, error("CheckBlock_() : coinstake in wrong position"));
     }
 
 /*DONE*/
@@ -2769,24 +2770,24 @@ bool CBlock::CheckBlock(int pos, CValidationState &state, bool fCheckPOW, bool f
 
     // ppcoin: coinbase output should be empty if proof-of-stake block
     if (IsProofOfStake() && (vtx[0].vout.size() != 1 || !vtx[0].vout[0].IsEmpty()))
-        return error("CheckBlock() : coinbase output not empty for proof-of-stake block");
+        return error("CheckBlock_() : coinbase output not empty for proof-of-stake block");
 
     // Second transaction must be coinstake, the rest must not be
     /*if (IsProofOfStake() && (vtx.empty() || !vtx[1].IsCoinStake()))
-        return DoS(100, error("CheckBlock() : second tx is not coinstake"));*/
+        return DoS(100, error("CheckBlock_() : second tx is not coinstake"));*/
 
 
     // Check coinbase timestamp
     // if (GetBlockTime() > (int64)vtx[0].nTime + nMaxClockDrift)
     if (GetBlockTime() > FutureDrift((int64)vtx[0].nTime)) {
-        return state.DoS(50, error("CheckBlock() : coinbase timestamp is too early"));
+        return state.DoS(50, error("CheckBlock_() : coinbase timestamp is too early"));
     }
 
 /*DONE_*/
 
     // Check coinstake timestamp
     if (IsProofOfStake() && !CheckCoinStakeTimestamp(GetBlockTime(), (int64)vtx[1].nTime))
-        return state.DoS(50, error("CheckBlock() : coinstake timestamp violation nTimeBlock=%" PRI64u" nTimeTx=%u", GetBlockTime(), vtx[1].nTime));
+        return state.DoS(50, error("CheckBlock_() : coinstake timestamp violation nTimeBlock=%" PRI64u" nTimeTx=%u", GetBlockTime(), vtx[1].nTime));
 
     // printf("CheckBlock26\n");
     // Check coinbase reward
@@ -2798,7 +2799,7 @@ bool CBlock::CheckBlock(int pos, CValidationState &state, bool fCheckPOW, bool f
          // printf("nBits=0x%08x\n", nBits);
         int64 nReward = GetProofOfWorkReward(pos, nBits,nTempFee) - vtx[0].GetMinFee() + MIN_TX_FEE;
 
-        printf("GetProofOfWorkReward_ is: %"PRI64d"\n",GetProofOfWorkReward(pos, nBits, nTempFee));
+
         printf("nReward is: %"PRI64d"\n", nReward);
         printf("vtx[0].GetMinFee() is: %d\n",vtx[0].GetMinFee());
         printf("MIN_TX_FEE is: %d\n",MIN_TX_FEE);
@@ -2806,10 +2807,8 @@ bool CBlock::CheckBlock(int pos, CValidationState &state, bool fCheckPOW, bool f
         printf("CheckBlock27\n");
         // if (vtx[0].GetValueOut() > nReward)
         if (vtx[0].GetValueOut() > (IsProofOfWork()? (nReward) : 0)) {
-            return state.DoS(50, error("CheckBlock() : coinbase reward exceeded %s > %s")); 
-            /*return state.DoS(50, error("CheckBlock() : coinbase reward exceeded %s > %s", 
-                       FormatMoney(vtx[0].GetValueOut()).c_str(),
-                       FormatMoney(IsProofOfWork()? GetProofOfWorkReward(nBits) : 0).c_str()));*/
+            return state.DoS(50, error("CheckBlock_() : coinbase reward exceeded %s > %s")); 
+            
         }       
     }
 
@@ -2819,10 +2818,10 @@ bool CBlock::CheckBlock(int pos, CValidationState &state, bool fCheckPOW, bool f
     BOOST_FOREACH(const CTransaction& tx, vtx)
     {
         if (!tx.CheckTransaction(state))
-            return error("CheckBlock() : CheckTransaction failed");
+            return error("CheckBlock_() : CheckTransaction failed");
         // ppcoin: check transaction timestamp
         if (GetBlockTime() < (int64)tx.nTime)
-            return state.DoS(50, error("CheckBlock() : block timestamp earlier than transaction timestamp"));
+            return state.DoS(50, error("CheckBlock_() : block timestamp earlier than transaction timestamp"));
     }
 
     // Build the merkle tree already. We need it anyway later, and it makes the
@@ -2838,7 +2837,7 @@ bool CBlock::CheckBlock(int pos, CValidationState &state, bool fCheckPOW, bool f
         uniqueTx.insert(GetTxHash(i));
     }
     if (uniqueTx.size() != vtx.size())
-        return state.DoS(100, error("CheckBlock() : duplicate transaction"), true);
+        return state.DoS(100, error("CheckBlock_() : duplicate transaction"), true);
 
     unsigned int nSigOps = 0;
     BOOST_FOREACH(const CTransaction& tx, vtx)
@@ -2846,18 +2845,18 @@ bool CBlock::CheckBlock(int pos, CValidationState &state, bool fCheckPOW, bool f
         nSigOps += tx.GetLegacySigOpCount();
     }
     if (nSigOps > MAX_BLOCK_SIGOPS)
-        return state.DoS(100, error("CheckBlock() : out-of-bounds SigOpCount"));
+        return state.DoS(100, error("CheckBlock_() : out-of-bounds SigOpCount"));
 
     // Check merkle root
     if (fCheckMerkleRoot && hashMerkleRoot != BuildMerkleTree())
-        return state.DoS(100, error("CheckBlock() : hashMerkleRoot mismatch"));
+        return state.DoS(100, error("CheckBlock_() : hashMerkleRoot mismatch"));
 
     printf("CheckBlock30\n");
     // ppcoin: check block signature
     // Only check block signature if check merkle root, c.f. commit 3cd01fdf
     // if (fCheckMerkleRoot && !CheckBlockSignature())
     if (IsProofOfStake() && (fCheckMerkleRoot && !CheckBlockSignature())) {
-        return state.DoS(100, error("CheckBlock() : bad block signature1"));
+        return state.DoS(100, error("CheckBlock_() : bad block signature1"));
     }
 
     printf("CheckBlock4\n");
@@ -3028,6 +3027,7 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
     }
 
     // Preliminary checks
+    printf("CheckBlock_() line 3029\n");
     if (!pblock->CheckBlock(pindexBest->nHeight,state))
         return error("ProcessBlock() : CheckBlock FAILED");
 
@@ -3597,6 +3597,7 @@ bool VerifyDB() {
         if (!block.ReadFromDisk(pindex))
             return error("VerifyDB() : *** block.ReadFromDisk failed at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString().c_str());
         // check level 1: verify block validity
+        printf("CheckBlock_() line 3599\n");
         if (nCheckLevel >= 1 && !block.CheckBlock(pindex->nHeight,state))
             return error("VerifyDB() : *** found bad block at %d, hash=%s\n", pindex->nHeight, pindex->GetBlockHash().ToString().c_str());
         // check level 2: verify undo validity
@@ -5530,7 +5531,7 @@ CBlockTemplate* CreateNewBlock(CReserveKey& reservekey, CWallet* pwallet, bool f
 
         //TO DO: take a look in case
         if (pblock->IsProofOfWork()) {
-            // pblock->vtx[0].vout[0].nValue = GetProofOfWorkReward(nFees);
+            //old steepcoin source: pblock->vtx[0].vout[0].nValue = GetProofOfWorkReward_a(nFees);
             printf("CreateNewBlock(): output nfee to log which is %lld\n", nFees);
             pblock->vtx[0].vout[0].nValue = GetProofOfWorkReward(pindexPrev->nHeight+1, pblock->nBits, nFees);
         }

@@ -5397,21 +5397,6 @@ CBlockTemplate* CreateNewBlock(CReserveKey& reservekey, CWallet* pwallet, bool f
     txNew.vin.resize(1);
     txNew.vin[0].prevout.SetNull();
     txNew.vout.resize(1);
-    /*
-    if (!fProofOfStake)
-    {
-        CReserveKey reservekey(pwallet);
-        txNew.vout[0].scriptPubKey.SetDestination(reservekey.GetReservedKey().GetID());
-    }
-    else
-    {
-        // Height first in coinbase required for block.version=2
-        txNew.vin[0].scriptSig = (CScript() << pindexPrev->nHeight+1) + COINBASE_FLAGS;
-        assert(txNew.vin[0].scriptSig.size() <= 100);
-
-        txNew.vout[0].SetEmpty();
-    }
-    */
     CPubKey pubkey;
     if (!reservekey.GetReservedKey(pubkey))
         return NULL;
@@ -5666,14 +5651,13 @@ CBlockTemplate* CreateNewBlock(CReserveKey& reservekey, CWallet* pwallet, bool f
             printf("CreateNewBlock_(): total size %" PRI64u"\n", nBlockSize);
 
         if (fProofOfStake) {
-            printf("fProofOfStake is on\n");
+            printf("fProofOfStak_e is on\n");
         }
         else {
-            printf("we do not have fProofOfStake here\n");
+            printf("we do not have fProofOfStak_e here\n");
         }
         //TO DO: take a look in case
-        // if (pblock->IsProofOfWork()) {
-        if (!fProofOfStake) {
+        if (pblock->IsProofOfWork()) {
             //old steepcoin source: pblock->vtx[0].vout[0].nValue = GetProofOfWorkReward_a(nFees);
             printf("CreateNewBlock_(): output nfee to log which is %lld\n", nFees);
             pblock->vtx[0].vout[0].nValue = GetProofOfWorkReward(pindexPrev->nHeight+1, pblock->nBits, nFees);
@@ -5681,18 +5665,15 @@ CBlockTemplate* CreateNewBlock(CReserveKey& reservekey, CWallet* pwallet, bool f
         pblocktemplate->vTxFees[0] = -nFees;
 
         // Fill in header
-        //
         pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
         if (pblock->IsProofOfStake())
             pblock->nTime      = pblock->vtx[1].nTime; //same as coinstake timestamp
         pblock->nTime          = max(pindexPrev->GetMedianTimePast()+1, pblock->GetMaxTransactionTime());
         pblock->nTime          = max(pblock->GetBlockTime(), PastDrift(pindexPrev->GetBlockTime()));
         // pblock->nTime          = max(pblock->GetBlockTime(), pindexPrev->GetBlockTime() - nMaxClockDrift);
-        
-        // if (pblock->IsProofOfWork()) {
-        if (!fProofOfStake) {
+        // if (pblock->IsProofOfWork())
+        if (!fProofOfStake)
             pblock->UpdateTime(pindexPrev);
-        }
         pblock->nNonce         = 0;
         pblock->vtx[0].vin[0].scriptSig = CScript() << OP_0 << OP_0;
         pblocktemplate->vTxSigOps[0] = pblock->vtx[0].GetLegacySigOpCount();

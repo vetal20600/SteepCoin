@@ -2175,7 +2175,7 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex, CCoinsVi
         for (unsigned int i=0; i<vtx.size(); i++) {
             uint256 hash = GetTxHash(i);
             if (view.HaveCoins(hash) && !view.GetCoins(hash).IsPruned())
-                return state.DoS(100, error("ConnectBlock() : tried to overwrite transaction"));
+                return state.DoS(100, error("ConnectBlock_() : tried to overwrite transaction"));
         }
     }*/
 
@@ -2212,14 +2212,14 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex, CCoinsVi
         nInputs += tx.vin.size();
         nSigOps += tx.GetLegacySigOpCount();
         if (nSigOps > MAX_BLOCK_SIGOPS)
-            return state.DoS(100, error("ConnectBlock() : too many sigops"));
+            return state.DoS(100, error("ConnectBlock_() : too many sigops"));
 
         if (tx.IsCoinBase())
             nValueOut += tx.GetValueOut();
         else
         {
             if (!tx.HaveInputs(view))
-                return state.DoS(100, error("ConnectBlock() : inputs missing/spent"));
+                return state.DoS(100, error("ConnectBlock_() : inputs missing/spent"));
 
             if (fStrictPayToScriptHash)
             {
@@ -2228,7 +2228,7 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex, CCoinsVi
                 // an incredibly-expensive-to-validate block.
                 nSigOps += tx.GetP2SHSigOpCount(view);
                 if (nSigOps > MAX_BLOCK_SIGOPS)
-                     return state.DoS(100, error("ConnectBlock() : too many sigops"));
+                     return state.DoS(100, error("ConnectBlock_() : too many sigops"));
             }
 
             int64 nTxValueIn = tx.GetValueIn(view);
@@ -2257,6 +2257,29 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex, CCoinsVi
     /*if (!CheckBlock_a(pindex->nHeight,state, !fJustCheck, !fJustCheck))
         return false;*/
 
+
+    /**/
+    /*if (IsProofOfWork())
+    {
+        int64_t nReward = GetProofOfWorkReward(nFees);
+        // Check coinbase reward
+        if (vtx[0].GetValueOut() > nReward)
+            return DoS(50, error("ConnectBlock_() : coinbase reward exceeded (actual=%"PRId64" vs calculated=%"PRId64")",
+                   vtx[0].GetValueOut(),
+                   nReward));
+    }*/
+    /**/
+    if (IsProofOfWork()) {
+        int pos = pindex->nHeight;
+        int64 nReward = GetProofOfWorkReward(pos, nBits, nFees);
+        printf("int64 nReward is: %"PRI64d"\n", nReward);
+        printf("CheckBlock27\n");
+        if (vtx[0].GetValueOut() > (IsProofOfWork()? (nReward) : 0)) {
+            return state.DoS(50, error("CheckBlock_() : coinbase reward exceeded %s > %s")); 
+            
+        }       
+    }
+
     int64 nTime = GetTimeMicros() - nStart;
     if (fBenchmark)
         printf("- Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin)\n", (unsigned)vtx.size(), 0.001 * nTime, 0.001 * nTime / vtx.size(), nInputs <= 1 ? 0 : 0.001 * nTime / (nInputs-1));
@@ -2269,17 +2292,18 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex, CCoinsVi
     if (fBenchmark)
         printf("- Verify %u txins: %.2fms (%.3fms/txin)\n", nInputs - 1, 0.001 * nTime2, nInputs <= 1 ? 0 : 0.001 * nTime2 / (nInputs-1));
 
-    if (fJustCheck)
-        return true;
 
     // ppcoin: track money supply and mint amount info
     pindex->nMint = nValueOut - nValueIn + nFees;
     pindex->nMoneySupply = (pindex->pprev? pindex->pprev->nMoneySupply : 0) + nValueOut - nValueIn;
 
+    if (fJustCheck)
+        return true;
+
     // ppcoin: fees are not collected by miners as in bitcoin
     // ppcoin: fees are destroyed to compensate the entire network
     if (fDebug && GetBoolArg("-printcreation"))
-        printf("ConnectBlock() : destroy=%s nFees=%" PRI64d"\n", FormatMoney(nFees).c_str(), nFees);
+        printf("ConnectBlock_() : destroy=%s nFees=%" PRI64d"\n", FormatMoney(nFees).c_str(), nFees);
 
     // Write undo information to disk
     if (pindex->GetUndoPos().IsNull() || (pindex->nStatus & BLOCK_VALID_MASK) < BLOCK_VALID_SCRIPTS)
@@ -2287,7 +2311,7 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex, CCoinsVi
         if (pindex->GetUndoPos().IsNull()) {
             CDiskBlockPos pos;
             if (!FindUndoPos(state, pindex->nFile, pos, ::GetSerializeSize(blockundo, SER_DISK, CLIENT_VERSION) + 40))
-                return error("ConnectBlock() : FindUndoPos failed");
+                return error("ConnectBlock_() : FindUndoPos failed");
             if (!blockundo.WriteToDisk(pos, pindex->pprev->GetBlockHash()))
                 return state.Abort(_("Failed to write undo data"));
 
@@ -2858,7 +2882,7 @@ bool CBlock::CheckBlock(int pos, CValidationState &state, bool fCheckPOW, bool f
 
     // int64 nfee = GetCurrentFee(state);
     // printf("updated_fee, value: %lld\n",nfee);
-    if (IsProofOfWork()) {
+    /*if (IsProofOfWork()) {
          // printf("nBits=0x%08x\n", nBits);
         int64 nReward = GetProofOfWorkReward(pos, nBits,nTempFee);// - vtx[0].GetMinFee() + MIN_TX_FEE;
         printf("nReward is: %"PRI64d"\n", nReward);
@@ -2868,7 +2892,7 @@ bool CBlock::CheckBlock(int pos, CValidationState &state, bool fCheckPOW, bool f
             return state.DoS(50, error("CheckBlock_() : coinbase reward exceeded %s > %s")); 
             
         }       
-    }
+    }*/
 
 
     printf("CheckBlock28\n");
@@ -3062,9 +3086,9 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
     // Check for duplicate
     uint256 hash = pblock->GetHash();
     if (mapBlockIndex.count(hash))
-        return state.Invalid(error("ProcessBlock() : already have block %d %s", mapBlockIndex[hash]->nHeight, hash.ToString().c_str()));
+        return state.Invalid(error("ProcessBlock_() : already have block %d %s", mapBlockIndex[hash]->nHeight, hash.ToString().c_str()));
     if (mapOrphanBlocks.count(hash))
-        return state.Invalid(error("ProcessBlock() : already have block (orphan) %s", hash.ToString().c_str()));
+        return state.Invalid(error("ProcessBlock_() : already have block (orphan) %s", hash.ToString().c_str()));
 
     // ppcoin: check proof-of-stake
     bool fDuplicateStakeOfBestBlock = false;
@@ -3080,14 +3104,14 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
             // Limited duplicity on stake: prevents block flood attack
             // Duplicate stake allowed only when there is orphan child block
             if (pblock->IsProofOfStake() && setStakeSeen.count(proofOfStake) && !mapOrphanBlocksByPrev.count(hash) && !WantedByPendingSyncCheckpoint(hash))
-                return error("ProcessBlock() : duplicate proof-of-stake (%s, %d) for block %s", proofOfStake.first.ToString().c_str(), proofOfStake.second, hash.ToString().c_str());
+                return error("ProcessBlock_() : duplicate proof-of-stake (%s, %d) for block %s", proofOfStake.first.ToString().c_str(), proofOfStake.second, hash.ToString().c_str());
         }
     }
 
     // Preliminary checks
     printf("CheckBlock_() line 3029\n");
     if (!pblock->CheckBlock(pindexBest->nHeight,state))
-        return error("ProcessBlock() : CheckBlock FAILED");
+        return error("ProcessBlock_() : CheckBlock FAILED");
 
     // ppcoin: verify hash target and signature of coinstake tx
     if (pblock->IsProofOfStake())
@@ -3095,7 +3119,7 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
         uint256 hashProofOfStake = 0;
         if (!CheckProofOfStake(state, pblock->vtx[1], pblock->nBits, hashProofOfStake))
         {
-            printf("WARNING: ProcessBlock(): check proof-of-stake failed for block %s\n", hash.ToString().c_str());
+            printf("WARNING: ProcessBlock_(): check proof-of-stake failed for block %s\n", hash.ToString().c_str());
             return false; // do not error here as we expect this during initial block download
         }
         if (!mapProofOfStake.count(hash)) // add to mapProofOfStake
@@ -3121,7 +3145,7 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
         
         if (bnNewBlock > bnRequired)
         {
-            return state.DoS(100, error("ProcessBlock() : block with too little %s", pblock->IsProofOfStake()? "proof-of-stake" : "proof-of-work"));
+            return state.DoS(100, error("ProcessBlock_() : block with too little %s", pblock->IsProofOfStake()? "proof-of-stake" : "proof-of-work"));
         }
     }
 
@@ -3131,7 +3155,7 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
 
     if (fDuplicateStakeOfBestBlock)
     {
-        printf("ProcessBlock() : block uses the same stake as the best block. Canceling the best block\n");
+        printf("ProcessBlock_() : block uses the same stake as the best block. Canceling the best block\n");
 
         // Save the block to be able to accept it if a new chain is built from it despite the rejection
         mapDuplicateStakeBlocks[pblock->GetHash()] = new CBlock(*pblock);
@@ -3144,18 +3168,18 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
         InvalidChainFound(pindexBest);
         CValidationState stateDummy;
         if (!SetBestChain(stateDummy, pindexBest->pprev))
-            return error("ProcessBlock(): SetBestChain on previous best block failed");
+            return error("ProcessBlock_(): SetBestChain on previous best block failed");
 
         return false;
     }
 
     if (!mapBlockIndex.count(pblock->hashPrevBlock) && mapDuplicateStakeBlocks.count(pblock->hashPrevBlock))
     {
-        printf("ProcessBlock() : parent block was previously rejected because of stake duplication. Reaccepting parent\n");
+        printf("ProcessBlock_() : parent block was previously rejected because of stake duplication. Reaccepting parent\n");
         CBlock* pprevBlock = mapDuplicateStakeBlocks[pblock->hashPrevBlock];
         // Block was already checked when it was first received, so we can just accept it here
         if (!pprevBlock->AcceptBlock(state, dbp))
-            return error("ProcessBlock() : AcceptBlock of previously duplicate block FAILED");
+            return error("ProcessBlock_() : AcceptBlock of previously duplicate block FAILED");
         mapDuplicateStakeBlocks.erase(pblock->hashPrevBlock);
         delete pprevBlock;
     }
@@ -3178,7 +3202,7 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
                 // Limited duplicity on stake: prevents block flood attack
                 // Duplicate stake allowed only when there is orphan child block
                 if (setStakeSeenOrphan.count(pblock2->GetProofOfStake()) && !mapOrphanBlocksByPrev.count(hash) && !WantedByPendingSyncCheckpoint(hash))
-                    return error("ProcessBlock() : duplicate proof-of-stake (%s, %d) for orphan block %s", pblock2->GetProofOfStake().first.ToString().c_str(), pblock2->GetProofOfStake().second, hash.ToString().c_str());
+                    return error("ProcessBlock_() : duplicate proof-of-stake (%s, %d) for orphan block %s", pblock2->GetProofOfStake().first.ToString().c_str(), pblock2->GetProofOfStake().second, hash.ToString().c_str());
                 else
                     setStakeSeenOrphan.insert(pblock2->GetProofOfStake());
             }
@@ -3197,7 +3221,7 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
 
     // Store to disk
     if (!pblock->AcceptBlock(state, dbp))
-        return error("ProcessBlock() : AcceptBlock FAILED");
+        return error("ProcessBlock_() : AcceptBlock FAILED");
 
     // Recursively process any orphan blocks that depended on this one
     vector<uint256> vWorkQueue;
@@ -3653,25 +3677,25 @@ bool VerifyDB() {
         CBlock block;
         // check level 0: read from disk
         if (!block.ReadFromDisk(pindex))
-            return error("VerifyDB() : *** block.ReadFromDisk failed at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString().c_str());
+            return error("VerifyDB_() : *** block.ReadFromDisk failed at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString().c_str());
         // check level 1: verify block validity
         printf("CheckBlock_() line 3599\n");
         if (nCheckLevel >= 1 && !block.CheckBlock(pindex->nHeight,state))
-            return error("VerifyDB() : *** found bad block at %d, hash=%s\n", pindex->nHeight, pindex->GetBlockHash().ToString().c_str());
+            return error("VerifyDB_() : *** found bad block at %d, hash=%s\n", pindex->nHeight, pindex->GetBlockHash().ToString().c_str());
         // check level 2: verify undo validity
         if (nCheckLevel >= 2 && pindex) {
             CBlockUndo undo;
             CDiskBlockPos pos = pindex->GetUndoPos();
             if (!pos.IsNull()) {
                 if (!undo.ReadFromDisk(pos, pindex->pprev->GetBlockHash()))
-                    return error("VerifyDB() : *** found bad undo data at %d, hash=%s\n", pindex->nHeight, pindex->GetBlockHash().ToString().c_str());
+                    return error("VerifyDB_() : *** found bad undo data at %d, hash=%s\n", pindex->nHeight, pindex->GetBlockHash().ToString().c_str());
             }
         }
         // check level 3: check for inconsistencies during memory-only disconnect of tip blocks
         if (nCheckLevel >= 3 && pindex == pindexState && (coins.GetCacheSize() + pcoinsTip->GetCacheSize()) <= 2*nCoinCacheSize + 32000) {
             bool fClean = true;
             if (!block.DisconnectBlock(state, pindex, coins, &fClean))
-                return error("VerifyDB() : *** irrecoverable inconsistency in block data at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString().c_str());
+                return error("VerifyDB_() : *** irrecoverable inconsistency in block data at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString().c_str());
             pindexState = pindex->pprev;
             if (!fClean) {
                 nGoodTransactions = 0;
@@ -3681,7 +3705,7 @@ bool VerifyDB() {
         }
     }
     if (pindexFailure)
-        return error("VerifyDB() : *** coin database inconsistencies found (last %i blocks, %i good transactions before that)\n", pindexBest->nHeight - pindexFailure->nHeight + 1, nGoodTransactions);
+        return error("VerifyDB_() : *** coin database inconsistencies found (last %i blocks, %i good transactions before that)\n", pindexBest->nHeight - pindexFailure->nHeight + 1, nGoodTransactions);
 
     // check level 4: try reconnecting blocks
     if (nCheckLevel >= 4) {
@@ -3691,9 +3715,9 @@ bool VerifyDB() {
             pindex = pindex->pnext;
             CBlock block;
             if (!block.ReadFromDisk(pindex))
-                return error("VerifyDB() : *** block.ReadFromDisk failed at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString().c_str());
+                return error("VerifyDB_() : *** block.ReadFromDisk failed at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString().c_str());
             if (!block.ConnectBlock(state, pindex, coins))
-                return error("VerifyDB() : *** found unconnectable block at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString().c_str());
+                return error("VerifyDB_() : *** found unconnectable block at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString().c_str());
         }
     }
 

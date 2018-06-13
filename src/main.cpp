@@ -1219,15 +1219,16 @@ int64 GetProofOfWorkReward(int nHeight, unsigned int nBits, int64 _nFees1)
 
 
 
-int64 GetProofOfStakeReward(int nHeight,int64 nCoinAge/*, int64 nFees1_*/)
+int64 GetProofOfStakeReward(int nHeight,int64 nCoinAge, int64 nFees1_)
 {
     // int currentheight_ = nHeight;
     if (pindexBest == NULL) {
-        printf("pindexBest3 is NULL\n");
+        printf("GetProofOfStakeReward_() pindexBest is NULL\n");
     }
     int currentheight_ = pindexBest->nHeight;
     int64 nSubsidy = 0 * COIN;
-    int64 nFees = 0 * CENT;
+    // int64 nFees = 0 * CENT;
+    int64 nFees = nFees1_;
     
     if (currentheight_ < 2000)
     {
@@ -1500,7 +1501,7 @@ int64 GetProofOfStakeReward(int nHeight,int64 nCoinAge/*, int64 nFees1_*/)
     }   
     
     if (fDebug && GetBoolArg("-printcreation")) {
-        printf("GetProofOfStakeReward(): create=%s nCoinAge=%" PRI64d"\n", FormatMoney(nSubsidy).c_str(), nCoinAge);        
+        printf("GetProofOfStakeReward_(): create=%s nCoinAge=%" PRI64d"\n", FormatMoney(nSubsidy).c_str(), nCoinAge);        
     }
     return nSubsidy + nFees;
 }
@@ -1859,7 +1860,7 @@ bool CTransaction::CheckInputs(CValidationState &state, CCoinsViewCache &inputs,
         // This doesn't trigger the DoS code on purpose; if it did, it would make it easier
         // for an attacker to attempt to split the network.
         if (!HaveInputs(inputs))
-            return state.Invalid(error("CheckInputs() : %s inputs unavailable", GetHash().ToString().c_str()));
+            return state.Invalid(error("CheckInputs_() : %s inputs unavailable", GetHash().ToString().c_str()));
 
         // While checking, GetBestBlock() refers to the parent block.
         // This is also true for mempool checks.
@@ -1874,49 +1875,50 @@ bool CTransaction::CheckInputs(CValidationState &state, CCoinsViewCache &inputs,
             // If prev is coinbase, check that it's matured
             if (coins.IsCoinBase() || coins.IsCoinStake()) {
                 if (nSpendHeight - coins.nHeight < nCoinbaseMaturity)
-                    return state.Invalid(error("CheckInputs() : tried to spend coinbase at depth %d", nSpendHeight - coins.nHeight));
+                    return state.Invalid(error("CheckInputs_() : tried to spend coinbase at depth %d", nSpendHeight - coins.nHeight));
             }
 
             // ppcoin: check transaction timestamp
             if (coins.nTime > nTime)
-                return state.DoS(100, error("CheckInputs() : transaction timestamp earlier than input transaction"));
+                return state.DoS(100, error("CheckInputs_() : transaction timestamp earlier than input transaction"));
 
             // Check for negative or overflow input values
             nValueIn += coins.vout[prevout.n].nValue;
             if (!MoneyRange(coins.vout[prevout.n].nValue) || !MoneyRange(nValueIn))
-                return state.DoS(100, error("CheckInputs() : txin values out of range"));
+                return state.DoS(100, error("CheckInputs_() : txin values out of range"));
 
         }
 
-        if (IsCoinStake())
+        /*if (IsCoinStake())
         {
             // ppcoin: coin stake tx earns reward instead of paying fee
             uint64 nCoinAge;
             if (!GetCoinAge(state, inputs, nCoinAge))
-                return error("CheckInputs() : %s unable to get coin age for coinstake", GetHash().ToString().c_str());
+                return error("CheckInputs_() : %s unable to get coin age for coinstake", GetHash().ToString().c_str());
             int64 nStakeReward = GetValueOut() - nValueIn;
             if (pindexBest == NULL) {
                 printf("pindexBest_ is NULL line 1891\n");
             }
-            int64 nCalculatedStakeReward = GetProofOfStakeReward(pindexBest->nHeight, nCoinAge) - GetMinFee() + MIN_TX_FEE;
+            int64 nCalculatedStakeReward = GetProofOfStakeReward_(pindexBest->nHeight, nCoinAge);// - GetMinFee() + MIN_TX_FEE;
             if (nStakeReward > nCalculatedStakeReward)
-                return state.DoS(100, error("CheckInputs() : %s stake reward exceeded", GetHash().ToString().c_str()));
+                return state.DoS(100, error("CheckInputs_() : %s stake reward exceeded", GetHash().ToString().c_str()));
         }
-        else
+        else*/
+        if (!IsCoinStake())
         {
             if (nValueIn < GetValueOut())
-                return state.DoS(100, error("CheckInputs() : %s value in < value out", GetHash().ToString().c_str()));
+                return state.DoS(100, error("CheckInputs_() : %s value in < value out", GetHash().ToString().c_str()));
     
             // Tally transaction fees
             int64 nTxFee = nValueIn - GetValueOut();
             if (nTxFee < 0)
-                return state.DoS(100, error("CheckInputs() : %s nTxFee < 0", GetHash().ToString().c_str()));
+                return state.DoS(100, error("CheckInputs_() : %s nTxFee < 0", GetHash().ToString().c_str()));
             // ppcoin: enforce transaction fees for every block
             if (nTxFee < GetMinFee())
-                return state.DoS(100, error("CheckInputs() : %s not paying required fee=%s, paid=%s", GetHash().ToString().c_str(), FormatMoney(GetMinFee()).c_str(), FormatMoney(nTxFee).c_str()));
+                return state.DoS(100, error("CheckInputs_() : %s not paying required fee=%s, paid=%s", GetHash().ToString().c_str(), FormatMoney(GetMinFee()).c_str(), FormatMoney(nTxFee).c_str()));
             nFees += nTxFee;
             if (!MoneyRange(nFees))
-                return state.DoS(100, error("CheckInputs() : nFees out of range"));
+                return state.DoS(100, error("CheckInputs_() : nFees out of range"));
         }
 
         // The first loop above does all the inexpensive checks.
@@ -2201,6 +2203,7 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex, CCoinsVi
     int64 nValueIn = 0;
     int64 nValueOut = 0;
     int nInputs = 0;
+    int64 nStakeReward = 0;
     unsigned int nSigOps = 0;
     CDiskTxPos pos(pindex->GetBlockPos(), GetSizeOfCompactSize(vtx.size()));
     std::vector<std::pair<uint256, CDiskTxPos> > vPos;
@@ -2237,6 +2240,8 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex, CCoinsVi
             nValueOut += nTxValueOut;
             if (!tx.IsCoinStake())
                 nFees += nTxValueIn - nTxValueOut;
+            if (tx.IsCoinStake())
+                nStakeReward = nTxValueOut - nTxValueIn;
 
             std::vector<CScriptCheck> vChecks;
             if (!tx.CheckInputs(state, view, fScriptChecks, flags, nScriptCheckThreads ? &vChecks : NULL))
@@ -2269,6 +2274,19 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex, CCoinsVi
                    nReward));
     }*/
     /**/
+
+    /*if (IsProofOfStake())
+    {
+        // ppcoin: coin stake tx earns reward instead of paying fee
+        uint64_t nCoinAge;
+        if (!vtx[1].GetCoinAge(txdb, nCoinAge))
+            return error("ConnectBlock_() : %s unable to get coin age for coinstake", vtx[1].GetHash().ToString().substr(0,10).c_str());
+
+        int64_t nCalculatedStakeReward = GetProofOfStakeReward_(nCoinAge, nFees);
+
+        if (nStakeReward > nCalculatedStakeReward)
+            return DoS(100, error("ConnectBlock_() : coinstake pays too much(actual=%"PRId64" vs calculated=%"PRId64")", nStakeReward, nCalculatedStakeReward));
+    }*/
     if (IsProofOfWork()) {
         int pos = pindex->nHeight;
         int64 nReward = GetProofOfWorkReward(pos, nBits, nFees);
@@ -2279,6 +2297,23 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex, CCoinsVi
             
         }       
     }
+    if (IsProofOfStake())
+    {
+        printf("we are at 2299 line\n");
+        // ppcoin: coin stake tx earns reward instead of paying fee
+        uint64 nCoinAge;
+        if (!GetCoinAge(state, view/*inputs*/, nCoinAge))
+            return error("CheckInputs_() : %s unable to get coin age for coinstake", GetHash().ToString().c_str());
+
+        // int64 nStakeReward = GetValueOut() - nValueIn;
+        if (pindexBest == NULL) {
+            printf("pindexBest_ is NULL line 1891\n");
+        }
+        int64 nCalculatedStakeReward = GetProofOfStakeReward(pindexBest->nHeight, nCoinAge, nFees);
+        if (nStakeReward > nCalculatedStakeReward)
+            return state.DoS(100, error("CheckInputs_() : %s stake reward exceeded", GetHash().ToString().c_str()));
+    }
+
 
     int64 nTime = GetTimeMicros() - nStart;
     if (fBenchmark)
@@ -5612,12 +5647,12 @@ CBlockTemplate* CreateNewBlock(CReserveKey& reservekey, CWallet* pwallet, bool f
         nLastBlockTx = nBlockTx;
         nLastBlockSize = nBlockSize;
         if (fDebug && GetBoolArg("-printpriority"))
-            printf("CreateNewBlock(): total size %" PRI64u"\n", nBlockSize);
+            printf("CreateNewBlock_(): total size %" PRI64u"\n", nBlockSize);
 
         //TO DO: take a look in case
         if (pblock->IsProofOfWork()) {
             //old steepcoin source: pblock->vtx[0].vout[0].nValue = GetProofOfWorkReward_a(nFees);
-            printf("CreateNewBlock(): output nfee to log which is %lld\n", nFees);
+            printf("CreateNewBlock_(): output nfee to log which is %lld\n", nFees);
             pblock->vtx[0].vout[0].nValue = GetProofOfWorkReward(pindexPrev->nHeight+1, pblock->nBits, nFees);
         }
         pblocktemplate->vTxFees[0] = -nFees;
@@ -5641,7 +5676,7 @@ CBlockTemplate* CreateNewBlock(CReserveKey& reservekey, CWallet* pwallet, bool f
         CCoinsViewCache viewNew(*pcoinsTip, true);
         CValidationState state;
         if (!pblock->ConnectBlock(state, &indexDummy, viewNew, true))
-            throw std::runtime_error("CreateNewBlock() : ConnectBlock failed");
+            throw std::runtime_error("CreateNewBlock_() : ConnectBlock failed");
     }
 
     return pblocktemplate.release();

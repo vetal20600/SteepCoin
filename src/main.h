@@ -209,7 +209,7 @@ bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey);
 /** Check whether a block hash satisfies the proof-of-work requirement specified by nBits */
 bool CheckProofOfWork(uint256 hash, unsigned int nBits);
 int64 GetProofOfWorkReward(int nHeight,unsigned int nBits, int64 _nFees1);
-int64 GetProofOfStakeReward(int nHeight, int64 nCoinAge);
+int64 GetProofOfStakeReward(int nHeight, int64 nCoinAge, int64 nFees1_);
 /** Calculate the minimum amount of work a received block needs, without knowing its direct parent */
 unsigned int ComputeMinWork(unsigned int nBase, int64 nTime);
 unsigned int ComputeMinStake(unsigned int nBase, int64 nTime, unsigned int nBlockTime);

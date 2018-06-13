@@ -2302,7 +2302,8 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex, CCoinsVi
         printf("we are at 2299 line\n");
         // ppcoin: coin stake tx earns reward instead of paying fee
         uint64 nCoinAge;
-        if (!GetCoinAge(state, view/*inputs*/, nCoinAge))
+        // if (!vtx[1].GetCoinAge(txdb, nCoinAge))
+        if (!vtx[1].GetCoinAge(state, view/*inputs*/, nCoinAge))
             return error("CheckInputs_() : %s unable to get coin age for coinstake", GetHash().ToString().c_str());
 
         // int64 nStakeReward = GetValueOut() - nValueIn;

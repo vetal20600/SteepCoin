@@ -2148,9 +2148,6 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex, CCoinsVi
 
     // Special case for the genesis block, skipping connection of its transactions
     // (its coinbase is unspendable)
-    uint256 hashblock152306 = uint256("4177bde36b18b83103a0b76668f2c362073fca3598659ef1ae8297676a8db979");
-    uint256 currb = GetHash();
-    printf("%s BlockCurrent=0x%s ", currb.ToString().substr(0, 20).c_str());
     if (GetHash() == hashGenesisBlock) {
         view.SetBestBlock(pindex);
         pindexGenesisBlock = pindex;
@@ -5676,9 +5673,11 @@ CBlockTemplate* CreateNewBlock(CReserveKey& reservekey, CWallet* pwallet, bool f
         pblock->nTime          = max(pindexPrev->GetMedianTimePast()+1, pblock->GetMaxTransactionTime());
         pblock->nTime          = max(pblock->GetBlockTime(), PastDrift(pindexPrev->GetBlockTime()));
         // pblock->nTime          = max(pblock->GetBlockTime(), pindexPrev->GetBlockTime() - nMaxClockDrift);
-        if (pblock->IsProofOfWork())
-        // if (!fProofOfStake)
+        if (pblock->IsProofOfWork()) {
             pblock->UpdateTime(pindexPrev);
+        }
+        // if (!fProofOfStake)
+            
         pblock->nNonce         = 0;
         pblock->vtx[0].vin[0].scriptSig = CScript() << OP_0 << OP_0;
         pblocktemplate->vTxSigOps[0] = pblock->vtx[0].GetLegacySigOpCount();

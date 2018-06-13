@@ -1970,12 +1970,12 @@ bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoin
     CBlockUndo blockUndo;
     CDiskBlockPos pos = pindex->GetUndoPos();
     if (pos.IsNull())
-        return error("DisconnectBlock() : no undo data available");
+        return error("DisconnectBlock_() : no undo data available");
     if (!blockUndo.ReadFromDisk(pos, pindex->pprev->GetBlockHash()))
-        return error("DisconnectBlock() : failure reading undo data");
+        return error("DisconnectBlock_() : failure reading undo data");
 
     if (blockUndo.vtxundo.size() + 1 != vtx.size())
-        return error("DisconnectBlock() : block and undo data inconsistent");
+        return error("DisconnectBlock_() : block and undo data inconsistent");
 
     // undo transactions in reverse order
     for (int i = vtx.size() - 1; i >= 0; i--) {
@@ -1984,7 +1984,7 @@ bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoin
 
         // check that all outputs are available
         if (!view.HaveCoins(hash)) {
-            fClean = fClean && error("DisconnectBlock() : outputs still spent? database corrupted");
+            fClean = fClean && error("DisconnectBlock_() : outputs still spent? database corrupted");
             view.SetCoins(hash, CCoins());
         }
         CCoins &outs = view.GetCoins(hash);
@@ -1996,7 +1996,7 @@ bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoin
         if (outsBlock.nVersion < 0)
             outs.nVersion = outsBlock.nVersion;
         if (outs != outsBlock)
-            fClean = fClean && error("DisconnectBlock() : added transaction mismatch? database corrupted");
+            fClean = fClean && error("DisconnectBlock_() : added transaction mismatch? database corrupted");
 
         // remove outputs
         outs = CCoins();
@@ -2005,7 +2005,7 @@ bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoin
         if (i > 0) { // not coinbases
             const CTxUndo &txundo = blockUndo.vtxundo[i-1];
             if (txundo.vprevout.size() != tx.vin.size())
-                return error("DisconnectBlock() : transaction and undo data inconsistent");
+                return error("DisconnectBlock_() : transaction and undo data inconsistent");
             for (unsigned int j = tx.vin.size(); j-- > 0;) {
                 const COutPoint &out = tx.vin[j].prevout;
                 const CTxInUndo &undo = txundo.vprevout[j];
@@ -2014,7 +2014,7 @@ bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoin
                 if (undo.nHeight != 0) {
                     // undo data contains height: this is the last output of the prevout tx being spent
                     if (!coins.IsPruned())
-                        fClean = fClean && error("DisconnectBlock() : undo data overwriting existing transaction");
+                        fClean = fClean && error("DisconnectBlock_() : undo data overwriting existing transaction");
                     coins = CCoins();
                     coins.fCoinBase = undo.fCoinBase;
                     coins.nHeight = undo.nHeight;
@@ -2023,15 +2023,15 @@ bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoin
                     coins.nTime = undo.nTime;           // ppcoin
                 } else {
                     if (coins.IsPruned())
-                        fClean = fClean && error("DisconnectBlock() : undo data adding output to missing transaction");
+                        fClean = fClean && error("DisconnectBlock_() : undo data adding output to missing transaction");
                 }
                 if (coins.IsAvailable(out.n))
-                    fClean = fClean && error("DisconnectBlock() : undo data overwriting existing output");
+                    fClean = fClean && error("DisconnectBlock_() : undo data overwriting existing output");
                 if (coins.vout.size() < out.n+1)
                     coins.vout.resize(out.n+1);
                 coins.vout[out.n] = undo.txout;
                 if (!view.SetCoins(out.hash, coins))
-                    return error("DisconnectBlock() : cannot restore coin inputs");
+                    return error("DisconnectBlock_() : cannot restore coin inputs");
             }
         }
     }
@@ -2148,6 +2148,9 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex, CCoinsVi
 
     // Special case for the genesis block, skipping connection of its transactions
     // (its coinbase is unspendable)
+    uint256 hashblock152306 = uint256("4177bde36b18b83103a0b76668f2c362073fca3598659ef1ae8297676a8db979");
+    uiunt256 currb = GetHash();
+    printf("%s BlockCurrent=0x%s ", currb.ToString().substr(0, 20).c_str());
     if (GetHash() == hashGenesisBlock) {
         view.SetBestBlock(pindex);
         pindexGenesisBlock = pindex;
@@ -5662,6 +5665,8 @@ CBlockTemplate* CreateNewBlock(CReserveKey& reservekey, CWallet* pwallet, bool f
             printf("CreateNewBlock_(): output nfee to log which is %lld\n", nFees);
             pblock->vtx[0].vout[0].nValue = GetProofOfWorkReward(pindexPrev->nHeight+1, pblock->nBits, nFees);
         }
+        /*if (!fProofOfStake)
+            pblock->vtx[0].vout[0].nValue = GetProofOfWorkReward(pindexPrev->nHeight+1, pblock->nBits, nFees);*/
         pblocktemplate->vTxFees[0] = -nFees;
 
         // Fill in header
@@ -5671,8 +5676,8 @@ CBlockTemplate* CreateNewBlock(CReserveKey& reservekey, CWallet* pwallet, bool f
         pblock->nTime          = max(pindexPrev->GetMedianTimePast()+1, pblock->GetMaxTransactionTime());
         pblock->nTime          = max(pblock->GetBlockTime(), PastDrift(pindexPrev->GetBlockTime()));
         // pblock->nTime          = max(pblock->GetBlockTime(), pindexPrev->GetBlockTime() - nMaxClockDrift);
-        // if (pblock->IsProofOfWork())
-        if (!fProofOfStake)
+        if (pblock->IsProofOfWork())
+        // if (!fProofOfStake)
             pblock->UpdateTime(pindexPrev);
         pblock->nNonce         = 0;
         pblock->vtx[0].vin[0].scriptSig = CScript() << OP_0 << OP_0;

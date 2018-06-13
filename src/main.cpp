@@ -2261,7 +2261,7 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex, CCoinsVi
     /**/
     /*if (IsProofOfWork())
     {
-        int64_t nReward = GetProofOfWorkReward(nFees);
+        int64_t nReward = GetProofOfWorkReward_(nFees);
         // Check coinbase reward
         if (vtx[0].GetValueOut() > nReward)
             return DoS(50, error("ConnectBlock_() : coinbase reward exceeded (actual=%"PRId64" vs calculated=%"PRId64")",
@@ -2876,6 +2876,9 @@ bool CBlock::CheckBlock(int pos, CValidationState &state, bool fCheckPOW, bool f
 
     // printf("CheckBlock26\n");
     // Check coinbase reward
+    if (IsProofOfStake()) {
+        printf("CheckBlock26a | proof_of_stake\n");
+    }
     if (IsProofOfWork()) {
         printf("CheckBlock26 | proof_of_work\n");
     }
@@ -2884,7 +2887,7 @@ bool CBlock::CheckBlock(int pos, CValidationState &state, bool fCheckPOW, bool f
     // printf("updated_fee, value: %lld\n",nfee);
     /*if (IsProofOfWork()) {
          // printf("nBits=0x%08x\n", nBits);
-        int64 nReward = GetProofOfWorkReward(pos, nBits,nTempFee);// - vtx[0].GetMinFee() + MIN_TX_FEE;
+        int64 nReward = GetProofOfWorkReward_(pos, nBits,nTempFee);// - vtx[0].GetMinFee() + MIN_TX_FEE;
         printf("nReward is: %"PRI64d"\n", nReward);
         printf("CheckBlock27\n");
         // if (vtx[0].GetValueOut() > nReward)

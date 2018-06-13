@@ -5650,6 +5650,12 @@ CBlockTemplate* CreateNewBlock(CReserveKey& reservekey, CWallet* pwallet, bool f
         if (fDebug && GetBoolArg("-printpriority"))
             printf("CreateNewBlock_(): total size %" PRI64u"\n", nBlockSize);
 
+        if (fProofOfStake) {
+            printf("fProofOfStake is on\n");
+        }
+        else {
+            printf("we do not have fProofOfStake here\n");
+        }
         //TO DO: take a look in case
         if (pblock->IsProofOfWork()) {
             //old steepcoin source: pblock->vtx[0].vout[0].nValue = GetProofOfWorkReward_a(nFees);

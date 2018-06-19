@@ -5650,7 +5650,7 @@ CBlockTemplate* CreateNewBlock(CReserveKey& reservekey, CWallet* pwallet, bool f
         if (fDebug && GetBoolArg("-printpriority"))
             printf("CreateNewBlock_(): total size %" PRI64u"\n", nBlockSize);
 
-        printf("CreateNewBlock_(): Current height is \n", (pindexPrev->nHeight + 1));
+        printf("CreateNewBlock_(): Current height is %d\n", (pindexPrev->nHeight + 1));
         if (fProofOfStake) {
             printf("fProofOfStak_e is on\n");
         }

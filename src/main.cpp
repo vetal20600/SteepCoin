@@ -2297,12 +2297,14 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex, CCoinsVi
         if (nStakeReward > nCalculatedStakeReward)
             return DoS(100, error("ConnectBlock_() : coinstake pays too much(actual=%"PRId64" vs calculated=%"PRId64")", nStakeReward, nCalculatedStakeReward));
     }*/
-    if (IsProofOfWork()) {//nReward = GetProofOfWorkReward(
+    if (IsProofOfWork() && ((pindex->nHeight)!=152306)) {//nReward = GetProofOfWorkReward(
         int pos = pindex->nHeight;
         int64 nReward = GetProofOfWorkReward(pos, nBits, nFees);
         printf("int64 nReward is: %"PRI64d" and nheight is %d\n", nReward, pos);
         printf("CheckBlock27\n");
-        if (vtx[0].GetValueOut() > (IsProofOfWork()? (nReward) : 0)) {
+
+        // if (vtx[0].GetValueOut() > (IsProofOfWork_()? (nReward) : 0)) {
+        if (vtx[0].GetValueOut() > nReward) {
             return state.DoS(50, error("CheckBlock_() : coinbase reward exceeded %s > %s")); 
             
         }       
@@ -5671,7 +5673,7 @@ CBlockTemplate* CreateNewBlock(CReserveKey& reservekey, CWallet* pwallet, bool f
             printf("we do not have fProofOfStak_e here\n");
         }
         //TO DO: take a look in case
-        if (pblock->IsProofOfWork() /*&& ((pindexPrev->nHeight + 1)!=152306)*/) {
+        if (pblock->IsProofOfWork() && ((pindexPrev->nHeight + 1)!=152306)) {
             //old steepcoin source: pblock->vtx[0].vout[0].nValue = GetProofOfWorkReward_a(nFees);
             printf("CreateNewBlock_(): output nfee to log which is %lld\n", nFees);
             pblock->vtx[0].vout[0].nValue = GetProofOfWorkReward(pindexPrev->nHeight+1, pblock->nBits, nFees);
@@ -5687,7 +5689,7 @@ CBlockTemplate* CreateNewBlock(CReserveKey& reservekey, CWallet* pwallet, bool f
         pblock->nTime          = max(pindexPrev->GetMedianTimePast()+1, pblock->GetMaxTransactionTime());
         pblock->nTime          = max(pblock->GetBlockTime(), PastDrift(pindexPrev->GetBlockTime()));
         // pblock->nTime          = max(pblock->GetBlockTime(), pindexPrev->GetBlockTime() - nMaxClockDrift);
-        if (pblock->IsProofOfWork() /*&& ((pindexPrev->nHeight + 1)!=152306)*/) {
+        if (pblock->IsProofOfWork() && ((pindexPrev->nHeight + 1)!=152306)) {
             pblock->UpdateTime(pindexPrev);
         }
         // if (!fProofOfStake)

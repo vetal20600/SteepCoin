@@ -5469,7 +5469,8 @@ CBlockTemplate* CreateNewBlock(CReserveKey& reservekey, CWallet* pwallet, bool f
         }
     }
 
-    pblock->nBits = GetNextTargetRequired(pindexPrev, (pblock->IsProofOfStake() || ((pindexPrev->nHeight + 1)==152306));
+    pblock->nBits = GetNextTargetRequired(pindexPrev, (pblock->IsProofOfStake() || ((pindexPrev->nHeight + 1)==152306)) );
+    // pblock->nBits = GetNextTargetRequired(pindexPrev, pblock->IsProofOfStake());
 
     // Collect memory pool transactions into the block
     int64 nFees = 0;

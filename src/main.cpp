@@ -3331,12 +3331,15 @@ bool CBlock::SignBlock(const CKeyStore& keystore)
 // ppcoin: check block signature
 bool CBlock::CheckBlockSignature() const
 {
-    if (GetHash() == hashGenesisBlock)
+    /*if (GetHash() == hashGenesisBlock)
+        return vchBlockSig.empty();*/
+    if (IsProofOfWork())
         return vchBlockSig.empty();
 
     vector<valtype> vSolutions;
     txnouttype whichType;
-    const CTxOut& txout = IsProofOfStake()? vtx[1].vout[1] : vtx[0].vout[0];
+    // const CTxOut& txout = IsProofOfStake()? vtx[1].vout[1] : vtx[0].vout[0];
+    const CTxOut& txout = vtx[1].vout[1];
 
     if (!Solver(txout.scriptPubKey, whichType, vSolutions))
         return false;
@@ -5668,7 +5671,7 @@ CBlockTemplate* CreateNewBlock(CReserveKey& reservekey, CWallet* pwallet, bool f
             printf("we do not have fProofOfStak_e here\n");
         }
         //TO DO: take a look in case
-        if (pblock->IsProofOfWork() && ((pindexPrev->nHeight + 1)!=152306)) {
+        if (pblock->IsProofOfWork() /*&& ((pindexPrev->nHeight + 1)!=152306)*/) {
             //old steepcoin source: pblock->vtx[0].vout[0].nValue = GetProofOfWorkReward_a(nFees);
             printf("CreateNewBlock_(): output nfee to log which is %lld\n", nFees);
             pblock->vtx[0].vout[0].nValue = GetProofOfWorkReward(pindexPrev->nHeight+1, pblock->nBits, nFees);
@@ -5684,7 +5687,7 @@ CBlockTemplate* CreateNewBlock(CReserveKey& reservekey, CWallet* pwallet, bool f
         pblock->nTime          = max(pindexPrev->GetMedianTimePast()+1, pblock->GetMaxTransactionTime());
         pblock->nTime          = max(pblock->GetBlockTime(), PastDrift(pindexPrev->GetBlockTime()));
         // pblock->nTime          = max(pblock->GetBlockTime(), pindexPrev->GetBlockTime() - nMaxClockDrift);
-        if (pblock->IsProofOfWork() && ((pindexPrev->nHeight + 1)!=152306)) {
+        if (pblock->IsProofOfWork() /*&& ((pindexPrev->nHeight + 1)!=152306)*/) {
             pblock->UpdateTime(pindexPrev);
         }
         // if (!fProofOfStake)

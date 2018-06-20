@@ -1221,11 +1221,21 @@ int64 GetProofOfWorkReward(int nHeight, unsigned int nBits, int64 _nFees1)
 
 int64 GetProofOfStakeReward(int nHeight,int64 nCoinAge, int64 nFees1_)
 {
+    int currentheight_ = nHeight;
     // int currentheight_ = nHeight;
+    // if (pindexBest == NULL) {
+    //     printf("GetProofOfStakeReward_() pindexBest is NULL\n");
+    // }
     if (pindexBest == NULL) {
-        printf("GetProofOfStakeReward_() pindexBest is NULL\n");
+        printf("[GetProofOfStakeReward_] pindexBest is NULL\n");
+        printf("[GetProofOfStakeReward_] currentheight is %d\n", currentheight);
     }
-    int currentheight_ = pindexBest->nHeight;
+    else {
+        currentheight_ = pindexBest->nHeight;
+        printf("[GetProofOfStakeReward_] currentheight is pindexBest->nHeight is %d\n", currentheight);
+    }
+
+    
     int64 nSubsidy = 0 * COIN;
     // int64 nFees = 0 * CENT;
     int64 nFees = nFees1_;
@@ -2264,7 +2274,7 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex, CCoinsVi
 
 
     /**/
-    /*if (IsProofOfWork())
+    /*if (IsProofOfWork_())
     {
         int64_t nReward = GetProofOfWorkReward_(nFees);
         // Check coinbase reward
@@ -2287,10 +2297,10 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex, CCoinsVi
         if (nStakeReward > nCalculatedStakeReward)
             return DoS(100, error("ConnectBlock_() : coinstake pays too much(actual=%"PRId64" vs calculated=%"PRId64")", nStakeReward, nCalculatedStakeReward));
     }*/
-    if (IsProofOfWork()) {
+    if (IsProofOfWork()) {//nReward = GetProofOfWorkReward(
         int pos = pindex->nHeight;
         int64 nReward = GetProofOfWorkReward(pos, nBits, nFees);
-        printf("int64 nReward is: %"PRI64d"\n", nReward);
+        printf("int64 nReward is: %"PRI64d" and nheight is %d\n", nReward, pos);
         printf("CheckBlock27\n");
         if (vtx[0].GetValueOut() > (IsProofOfWork()? (nReward) : 0)) {
             return state.DoS(50, error("CheckBlock_() : coinbase reward exceeded %s > %s")); 
@@ -2921,13 +2931,13 @@ bool CBlock::CheckBlock(int pos, CValidationState &state, bool fCheckPOW, bool f
 
     // int64 nfee = GetCurrentFee(state);
     // printf("updated_fee, value: %lld\n",nfee);
-    /*if (IsProofOfWork()) {
+    /*if (IsProofOfWork_()) {
          // printf("nBits=0x%08x\n", nBits);
         int64 nReward = GetProofOfWorkReward_(pos, nBits,nTempFee);// - vtx[0].GetMinFee() + MIN_TX_FEE;
         printf("nReward is: %"PRI64d"\n", nReward);
         printf("CheckBlock27\n");
         // if (vtx[0].GetValueOut() > nReward)
-        if (vtx[0].GetValueOut() > (IsProofOfWork()? (nReward) : 0)) {
+        if (vtx[0].GetValueOut() > (IsProofOfWork_()? (nReward) : 0)) {
             return state.DoS(50, error("CheckBlock_() : coinbase reward exceeded %s > %s")); 
             
         }       
@@ -5658,7 +5668,7 @@ CBlockTemplate* CreateNewBlock(CReserveKey& reservekey, CWallet* pwallet, bool f
             printf("we do not have fProofOfStak_e here\n");
         }
         //TO DO: take a look in case
-        if (pblock->IsProofOfWork()) {
+        if (pblock->IsProofOfWork() && ((pindexPrev->nHeight + 1)!=152306)) {
             //old steepcoin source: pblock->vtx[0].vout[0].nValue = GetProofOfWorkReward_a(nFees);
             printf("CreateNewBlock_(): output nfee to log which is %lld\n", nFees);
             pblock->vtx[0].vout[0].nValue = GetProofOfWorkReward(pindexPrev->nHeight+1, pblock->nBits, nFees);
@@ -5674,7 +5684,7 @@ CBlockTemplate* CreateNewBlock(CReserveKey& reservekey, CWallet* pwallet, bool f
         pblock->nTime          = max(pindexPrev->GetMedianTimePast()+1, pblock->GetMaxTransactionTime());
         pblock->nTime          = max(pblock->GetBlockTime(), PastDrift(pindexPrev->GetBlockTime()));
         // pblock->nTime          = max(pblock->GetBlockTime(), pindexPrev->GetBlockTime() - nMaxClockDrift);
-        if (pblock->IsProofOfWork()) {
+        if (pblock->IsProofOfWork() && ((pindexPrev->nHeight + 1)!=152306)) {
             pblock->UpdateTime(pindexPrev);
         }
         // if (!fProofOfStake)
@@ -5765,6 +5775,7 @@ bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
     uint256 hash = pblock->GetHash();
     uint256 hashTarget = CBigNum().SetCompact(pblock->nBits).getuint256();
 
+    // printf("Line 5778, height is %d \n", && (pindexPrev->nHeight + 1));
     if (hash > hashTarget && pblock->IsProofOfWork())
         return error("PeercoinMiner : proof-of-work not meeting target");
 

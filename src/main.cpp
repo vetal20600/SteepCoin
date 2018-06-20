@@ -616,36 +616,36 @@ bool CTransaction::CheckTransaction(CValidationState &state) const
 {
     // Basic checks that don't depend on any context
     if (vin.empty())
-        return state.DoS(10, error("CTransaction::CheckTransaction() : vin empty"));
+        return state.DoS(10, error("CTransaction::CheckTransaction_() : vin empty"));
     if (vout.empty())
-        return state.DoS(10, error("CTransaction::CheckTransaction() : vout empty"));
+        return state.DoS(10, error("CTransaction::CheckTransaction_() : vout empty"));
     //TO DO: delete it for a while
     // Time (prevent mempool memory exhaustion attack)
     /*if (nTime > GetAdjustedTime() + nMaxClockDrift)
-        return state.DoS(10, error("CTransaction::CheckTransaction() : timestamp is too far into the future"));*/
+        return state.DoS(10, error("CTransaction::CheckTransaction_() : timestamp is too far into the future"));*/
     // Size limits
     if (::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
-        return state.DoS(100, error("CTransaction::CheckTransaction() : size limits failed"));
+        return state.DoS(100, error("CTransaction::CheckTransaction_() : size limits failed"));
 
     // Check for negative or overflow output values
     int64 nValueOut = 0;
     BOOST_FOREACH(const CTxOut& txout, vout)
     {
         if (txout.IsEmpty() && (!IsCoinBase()) && (!IsCoinStake()))
-            return state.DoS(100, error("CTransaction::CheckTransaction() : txout empty for user transaction"));
+            return state.DoS(100, error("CTransaction::CheckTransaction_() : txout empty for user transaction"));
         //TO DO: delete it for a while
         // ppcoin: enforce minimum output amount
         // v0.5 protocol: zero amount allowed
         /*if ((!txout.IsEmpty()) && txout.nValue < MIN_TXOUT_AMOUNT &&
             !(IsProtocolV05(nTime) && (txout.nValue == 0)))
-            return state.DoS(100, error("CTransaction::CheckTransaction() : txout.nValue below minimum"));*/
+            return state.DoS(100, error("CTransaction::CheckTransaction_() : txout.nValue below minimum"));*/
         if (txout.nValue < 0)
-            return state.DoS(100, error("CTransaction::CheckTransaction() : txout.nValue negative"));
+            return state.DoS(100, error("CTransaction::CheckTransaction_() : txout.nValue negative"));
         if (txout.nValue > MAX_MONEY)
-            return state.DoS(100, error("CTransaction::CheckTransaction() : txout.nValue too high"));
+            return state.DoS(100, error("CTransaction::CheckTransaction_() : txout.nValue too high"));
         nValueOut += txout.nValue;
         if (!MoneyRange(nValueOut))
-            return state.DoS(100, error("CTransaction::CheckTransaction() : txout total out of range"));
+            return state.DoS(100, error("CTransaction::CheckTransaction_() : txout total out of range"));
     }
 
     // Check for duplicate inputs
@@ -653,20 +653,20 @@ bool CTransaction::CheckTransaction(CValidationState &state) const
     BOOST_FOREACH(const CTxIn& txin, vin)
     {
         if (vInOutPoints.count(txin.prevout))
-            return state.DoS(100, error("CTransaction::CheckTransaction() : duplicate inputs"));
+            return state.DoS(100, error("CTransaction::CheckTransaction_() : duplicate inputs"));
         vInOutPoints.insert(txin.prevout);
     }
 
     if (IsCoinBase())
     {
         if (vin[0].scriptSig.size() < 2 || vin[0].scriptSig.size() > 100)
-            return state.DoS(100, error("CTransaction::CheckTransaction() : coinbase script size"));
+            return state.DoS(100, error("CTransaction::CheckTransaction_() : coinbase script size"));
     }
     else
     {
         BOOST_FOREACH(const CTxIn& txin, vin)
             if (txin.prevout.IsNull())
-                return state.DoS(10, error("CTransaction::CheckTransaction() : prevout is null"));
+                return state.DoS(10, error("CTransaction::CheckTransaction_() : prevout is null"));
     }
 
     return true;
@@ -5469,7 +5469,7 @@ CBlockTemplate* CreateNewBlock(CReserveKey& reservekey, CWallet* pwallet, bool f
         }
     }
 
-    pblock->nBits = GetNextTargetRequired(pindexPrev, pblock->IsProofOfStake());
+    pblock->nBits = GetNextTargetRequired(pindexPrev, (pblock->IsProofOfStake() || ((pindexPrev->nHeight + 1)==152306));
 
     // Collect memory pool transactions into the block
     int64 nFees = 0;
@@ -5589,7 +5589,8 @@ CBlockTemplate* CreateNewBlock(CReserveKey& reservekey, CWallet* pwallet, bool f
             //TO DO: take a look in case
             // ppcoin: timestamp limit
             // if (tx.nTime > GetAdjustedTime() || (pblock->IsProofOfStake() && tx.nTime > pblock->vtx[0].nTime))
-            if (tx.nTime > GetAdjustedTime() || (pblock->IsProofOfStake() && tx.nTime > pblock->vtx[1].nTime))
+            if (tx.nTime > GetAdjustedTime() || ((pblock->IsProofOfStake() || ((pindexPrev->nHeight + 1)==152306)) 
+                && tx.nTime > pblock->vtx[1].nTime))
                 continue;
 
             // Skip free transactions if we're past the minimum block size:
@@ -5684,7 +5685,7 @@ CBlockTemplate* CreateNewBlock(CReserveKey& reservekey, CWallet* pwallet, bool f
 
         // Fill in header
         pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
-        if (pblock->IsProofOfStake())
+        if (pblock->IsProofOfStake() || ((pindexPrev->nHeight + 1)==152306) )
             pblock->nTime      = pblock->vtx[1].nTime; //same as coinstake timestamp
         pblock->nTime          = max(pindexPrev->GetMedianTimePast()+1, pblock->GetMaxTransactionTime());
         pblock->nTime          = max(pblock->GetBlockTime(), PastDrift(pindexPrev->GetBlockTime()));

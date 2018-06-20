@@ -1228,11 +1228,11 @@ int64 GetProofOfStakeReward(int nHeight,int64 nCoinAge, int64 nFees1_)
     // }
     if (pindexBest == NULL) {
         printf("[GetProofOfStakeReward_] pindexBest is NULL\n");
-        printf("[GetProofOfStakeReward_] currentheight is %d\n", currentheight);
+        printf("[GetProofOfStakeReward_] currentheight is %d\n", currentheight_);
     }
     else {
         currentheight_ = pindexBest->nHeight;
-        printf("[GetProofOfStakeReward_] currentheight is pindexBest->nHeight is %d\n", currentheight);
+        printf("[GetProofOfStakeReward_] currentheight is pindexBest->nHeight is %d\n", currentheight_);
     }
 
     
